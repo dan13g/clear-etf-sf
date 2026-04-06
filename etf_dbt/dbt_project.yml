@@ -1,0 +1,28 @@
+name: "etf_dbt"
+version: "3.0.0"
+config-version: 2
+
+profile: "etf_dbt"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+models:
+  etf_dbt:
+    raw:
+      +materialized: table
+      +schema: raw
+    staging:
+      +materialized: table
+      +schema: stg
+    intermediate:
+      +materialized: table
+      +schema: int
+    marts:
+      +materialized: table
+      +schema: marts
+    reports:
+      +materialized: table
+      +schema: reports
+
+on-run-start:

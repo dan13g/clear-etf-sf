@@ -1,0 +1,8 @@
+pandas
+openpyxl
+openai
+python-dotenv
+certifi
+dbt-core==1.8.0
+dbt-duckdb==1.8.1
+duckdb==1.4.3

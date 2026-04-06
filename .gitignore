@@ -1,0 +1,9 @@
+.venv/
+
+.env
+__pycache__/
+*.pyc
+logs/
+src/logs/
+etf_dbt/logs/
+etf_dbt/target/
