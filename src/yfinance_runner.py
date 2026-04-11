@@ -5,7 +5,6 @@ import yfinance as yf
 TICKERS = [
     "VWRP.L",
     "VUAG.L",
-    "VUSA.L",
     "SSAC.L",
     "EIMI.L",
     "AGGG.L",

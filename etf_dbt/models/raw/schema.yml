@@ -1,4 +1,4 @@
 version: 2
 
 models:
-  - name: raw_orders
+  - name: raw_yfinance
