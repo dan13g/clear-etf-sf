@@ -1,0 +1,91 @@
+name: daily_runner
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub Actions cron is UTC. We trigger at both 21:00 and 22:00 UTC
+    # and only continue when Europe/London local time is 22:00.
+    - cron: "0 21 * * *"
+    - cron: "0 22 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  yfinance-runner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check London schedule window
+        if: github.event_name == 'schedule'
+        id: london_time
+        shell: bash
+        run: |
+          hour="$(TZ=Europe/London date +'%H')"
+          if [ "$hour" = "22" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Europe/London hour is $hour. Continuing."
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Europe/London hour is $hour. Skipping this run."
+          fi
+
+      - name: Set up Python
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate MotherDuck token
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        shell: bash
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: |
+          if [ -z "$MOTHERDUCK_TOKEN" ]; then
+            echo "MOTHERDUCK_TOKEN is not configured."
+            echo "Add it in GitHub: Settings > Secrets and variables > Actions > New repository secret."
+            exit 1
+          fi
+
+      - name: Run yfinance loader
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python src/yfinance_runner.py
+
+      - name: Create dbt profile
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        shell: bash
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: |
+          mkdir -p "$HOME/.dbt"
+          cat > "$HOME/.dbt/profiles.yml" <<'YAML'
+          etf_dbt:
+            target: dev
+            outputs:
+              dev:
+                type: duckdb
+                path: "md:clear_etf"
+                token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
+                threads: 4
+          YAML
+
+      - name: Run dbt
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        working-directory: etf_dbt
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: |
+          dbt debug
+          dbt deps
+          dbt run
