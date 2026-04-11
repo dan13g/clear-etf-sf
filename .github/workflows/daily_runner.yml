@@ -62,6 +62,12 @@ jobs:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python src/yfinance_runner.py
 
+      - name: Load metadata workbook
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python src/metadata_loader.py
+
       - name: Create dbt profile
         if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
         shell: bash
