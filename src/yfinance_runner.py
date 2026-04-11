@@ -44,6 +44,14 @@ def create_table(con):
     """)
 
 
+def purge_stale_tickers(con):
+    placeholders = ", ".join(["?"] * len(TICKERS))
+    con.execute(
+        f"DELETE FROM {SCHEMA}.{TABLE} WHERE ticker NOT IN ({placeholders})",
+        TICKERS
+    )
+
+
 def load_ticker(con, ticker):
     print(f"Refreshing {ticker}...")
 
@@ -116,6 +124,7 @@ def main():
     con = connect_md()
 
     create_table(con)
+    purge_stale_tickers(con)
 
     for ticker in TICKERS:
         load_ticker(con, ticker)
