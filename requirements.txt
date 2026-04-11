@@ -1,4 +1,5 @@
 pandas
+yfinance
 openpyxl
 openai
 python-dotenv

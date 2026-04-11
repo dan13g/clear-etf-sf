@@ -1,0 +1,51 @@
+name: Run yfinance loader
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub Actions cron is UTC. We trigger at both 21:00 and 22:00 UTC
+    # and only continue when Europe/London local time is 22:00.
+    - cron: "0 21 * * *"
+    - cron: "0 22 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  yfinance-runner:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check London schedule window
+        if: github.event_name == 'schedule'
+        id: london_time
+        shell: bash
+        run: |
+          hour="$(TZ=Europe/London date +'%H')"
+          if [ "$hour" = "22" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Europe/London hour is $hour. Continuing."
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Europe/London hour is $hour. Skipping this run."
+          fi
+
+      - name: Set up Python
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        run: python -m pip install -r requirements.txt
+
+      - name: Run yfinance loader
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python src/yfinance_runner.py
