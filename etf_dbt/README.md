@@ -48,5 +48,6 @@ For local secrets, create `.streamlit/secrets.toml` from `.streamlit/secrets.tom
 
 For Streamlit Community Cloud, set:
 - Main file path: `app/Home.py`
+- App dependency file: `app/requirements.txt`
 - Secret `MOTHERDUCK_TOKEN`
 - Optional secret `MOTHERDUCK_DATABASE=md:clear_etf`
