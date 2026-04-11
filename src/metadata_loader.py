@@ -62,6 +62,20 @@ def make_unique_identifiers(values) -> list[str]:
     return unique_values
 
 
+def normalize_dataframe_for_duckdb(dataframe: pd.DataFrame) -> pd.DataFrame:
+    normalized = dataframe.copy()
+
+    # DuckDB 1.4.x does not accept pandas' newer "str" extension dtype.
+    for column_name in normalized.select_dtypes(include=["string", "str"]).columns:
+        normalized[column_name] = normalized[column_name].astype("object")
+        normalized[column_name] = normalized[column_name].where(
+            normalized[column_name].notna(),
+            None,
+        )
+
+    return normalized
+
+
 def connect_md(database_path: str) -> duckdb.DuckDBPyConnection:
     token = os.getenv("MOTHERDUCK_TOKEN")
     if not token:
@@ -86,6 +100,7 @@ def load_sheet(
     dataframe = pd.read_excel(workbook, sheet_name=sheet_name)
     dataframe = dataframe.dropna(axis=0, how="all").dropna(axis=1, how="all")
     dataframe.columns = make_unique_identifiers(dataframe.columns)
+    dataframe = normalize_dataframe_for_duckdb(dataframe)
 
     temp_name = f"temp_{table_name}"
     connection.register(temp_name, dataframe)
