@@ -35,3 +35,18 @@ dbt run --select staging
 
 ## Notes
 - Raw models 
+
+## Streamlit App
+From the repo root:
+
+```bash
+pip install -r requirements.txt
+streamlit run app/Home.py
+```
+
+For local secrets, create `.streamlit/secrets.toml` from `.streamlit/secrets.toml.example` or use a repo-root `.env`.
+
+For Streamlit Community Cloud, set:
+- Main file path: `app/Home.py`
+- Secret `MOTHERDUCK_TOKEN`
+- Optional secret `MOTHERDUCK_DATABASE=md:clear_etf`

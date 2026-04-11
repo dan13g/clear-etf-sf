@@ -35,13 +35,31 @@ def load_repo_env(env_file: Path) -> None:
 load_repo_env(ENV_FILE)
 
 
+def get_streamlit_secret(name: str) -> str | None:
+    try:
+        import streamlit as st
+
+        secret_value = st.secrets.get(name)
+        if secret_value:
+            return str(secret_value)
+    except Exception:
+        return None
+
+    return None
+
+
 def connect_md(database_path: str | None = None) -> duckdb.DuckDBPyConnection:
-    token = os.getenv("MOTHERDUCK_TOKEN")
+    token = os.getenv("MOTHERDUCK_TOKEN") or get_streamlit_secret("MOTHERDUCK_TOKEN")
     if not token:
         raise RuntimeError("MOTHERDUCK_TOKEN env var is required.")
 
     escaped_token = token.replace("'", "''")
-    target_database = database_path or os.getenv("MOTHERDUCK_DATABASE", DEFAULT_DB_PATH)
+    target_database = (
+        database_path
+        or os.getenv("MOTHERDUCK_DATABASE")
+        or get_streamlit_secret("MOTHERDUCK_DATABASE")
+        or DEFAULT_DB_PATH
+    )
 
     connection = duckdb.connect(database=":memory:")
     connection.execute("INSTALL motherduck;")
