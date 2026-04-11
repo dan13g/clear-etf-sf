@@ -2,3 +2,82 @@ version: 2
 
 models:
   - name: stg_yfinance
+    description: Cleaned daily market prices with consistent field names for downstream calculations.
+    columns:
+      - name: ticker
+        tests:
+          - not_null
+      - name: trading_date
+        tests:
+          - not_null
+      - name: close_price
+        tests:
+          - not_null
+  - name: stg_etf
+    description: Cleaned ETF master metadata used to build conformed ETF dimensions.
+    columns:
+      - name: etf_code
+        tests:
+          - not_null
+          - unique
+      - name: ticker
+        tests:
+          - not_null
+      - name: equivalence_group_code
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_equivalence_group')
+              field: equivalence_group_code
+  - name: stg_geography
+    description: Cleaned ETF geography exposure weights at ETF by geography grain.
+    columns:
+      - name: etf_code
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_etf')
+              field: etf_code
+      - name: geography_name
+        tests:
+          - not_null
+      - name: exposure_weight
+        tests:
+          - not_null
+  - name: stg_sector
+    description: Cleaned ETF sector exposure weights at ETF by sector grain.
+    columns:
+      - name: etf_code
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_etf')
+              field: etf_code
+      - name: sector_name
+        tests:
+          - not_null
+      - name: exposure_weight
+        tests:
+          - not_null
+  - name: stg_equivalence_group
+    description: Cleaned equivalence group master data.
+    columns:
+      - name: equivalence_group_code
+        tests:
+          - not_null
+          - unique
+  - name: stg_equivalence_group_relationships
+    description: Cleaned equivalence group relationship mapping for future comparison logic.
+    columns:
+      - name: source_group_code
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_equivalence_group')
+              field: equivalence_group_code
+      - name: target_group_code
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_equivalence_group')
+              field: equivalence_group_code

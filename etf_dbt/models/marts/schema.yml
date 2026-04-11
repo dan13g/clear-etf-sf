@@ -1,0 +1,178 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: Calendar dimension covering the available ETF trading history date range.
+    columns:
+      - name: date_key
+        tests:
+          - not_null
+          - unique
+      - name: full_date
+        tests:
+          - not_null
+          - unique
+  - name: dim_provider
+    description: Conformed provider dimension for ETF issuers.
+    columns:
+      - name: provider_key
+        tests:
+          - not_null
+          - unique
+      - name: provider_name
+        tests:
+          - not_null
+          - unique
+  - name: dim_index
+    description: Conformed tracked-index dimension for ETF benchmarks.
+    columns:
+      - name: index_key
+        tests:
+          - not_null
+          - unique
+      - name: index_name
+        tests:
+          - not_null
+      - name: index_code
+        tests:
+          - not_null
+          - unique
+  - name: dim_equivalence_group
+    description: Conformed equivalence-group dimension used for duplicate and close-alternative logic.
+    columns:
+      - name: equivalence_group_key
+        tests:
+          - not_null
+          - unique
+      - name: equivalence_group_code
+        tests:
+          - not_null
+          - unique
+  - name: dim_etf
+    description: Core ETF product dimension that centralizes identity and structural metadata.
+    columns:
+      - name: etf_key
+        tests:
+          - not_null
+          - unique
+      - name: etf_code
+        tests:
+          - not_null
+          - unique
+      - name: ticker
+        tests:
+          - not_null
+          - unique
+      - name: provider_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_provider')
+              field: provider_key
+      - name: index_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_index')
+              field: index_key
+      - name: equivalence_group_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_equivalence_group')
+              field: equivalence_group_key
+  - name: dim_geography
+    description: Geography bucket dimension used by ETF geography bridge rows.
+    columns:
+      - name: geography_key
+        tests:
+          - not_null
+          - unique
+      - name: geography_name
+        tests:
+          - not_null
+          - unique
+  - name: bridge_etf_geography
+    description: Latest known ETF-to-geography exposure weights.
+    columns:
+      - name: etf_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_etf')
+              field: etf_key
+      - name: geography_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_geography')
+              field: geography_key
+      - name: exposure_weight
+        tests:
+          - not_null
+  - name: dim_sector
+    description: Sector dimension used by ETF sector bridge rows.
+    columns:
+      - name: sector_key
+        tests:
+          - not_null
+          - unique
+      - name: sector_name
+        tests:
+          - not_null
+          - unique
+  - name: bridge_etf_sector
+    description: Latest known ETF-to-sector exposure weights.
+    columns:
+      - name: etf_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_etf')
+              field: etf_key
+      - name: sector_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_sector')
+              field: sector_key
+      - name: exposure_weight
+        tests:
+          - not_null
+  - name: fact_etf_daily
+    description: Main ETF market analytics fact table at ETF by trading date grain.
+    columns:
+      - name: date_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: etf_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_etf')
+              field: etf_key
+      - name: close_price
+        tests:
+          - not_null
+  - name: dim_portfolio
+    description: Placeholder portfolio dimension for Phase 1 portfolio analysis expansion.
+    columns:
+      - name: portfolio_id
+        tests:
+          - unique
+  - name: portfolio_input_holding
+    description: Placeholder portfolio input layer at portfolio by ETF grain for future user-entered holdings.
+    columns:
+      - name: portfolio_id
+        tests:
+          - relationships:
+              to: ref('dim_portfolio')
+              field: portfolio_id
+      - name: etf_key
+        tests:
+          - relationships:
+              to: ref('dim_etf')
+              field: etf_key

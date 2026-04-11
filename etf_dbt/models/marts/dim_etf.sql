@@ -1,0 +1,21 @@
+select
+    md5(etf_code) as etf_key,
+    etf_code,
+    ticker,
+    isin,
+    fund_name,
+    md5(lower(provider_name)) as provider_key,
+    md5(index_code) as index_key,
+    md5(equivalence_group_code) as equivalence_group_key,
+    asset_class,
+    category,
+    distribution_type,
+    replication_method,
+    currency,
+    domicile,
+    hedged_flag,
+    ucits_flag,
+    ter,
+    inception_date,
+    is_active
+from {{ ref('stg_etf') }}

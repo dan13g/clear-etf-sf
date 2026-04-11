@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: daily_prices
+    description: Report-friendly daily ETF view joined across the Phase 1 star schema.
+    columns:
+      - name: full_date
+        tests:
+          - not_null
+      - name: ticker
+        tests:
+          - not_null

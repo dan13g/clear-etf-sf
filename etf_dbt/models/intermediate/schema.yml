@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_etf_daily_metrics
+    description: ETF daily performance metrics at ticker by trading date grain.
+    columns:
+      - name: ticker
+        tests:
+          - not_null
+      - name: trading_date
+        tests:
+          - not_null
+      - name: close_price
+        tests:
+          - not_null
