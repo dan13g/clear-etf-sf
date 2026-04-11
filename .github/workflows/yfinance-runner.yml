@@ -44,6 +44,18 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
         run: python -m pip install -r requirements.txt
 
+      - name: Validate MotherDuck token
+        if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
+        shell: bash
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: |
+          if [ -z "$MOTHERDUCK_TOKEN" ]; then
+            echo "MOTHERDUCK_TOKEN is not configured."
+            echo "Add it in GitHub: Settings > Secrets and variables > Actions > New repository secret."
+            exit 1
+          fi
+
       - name: Run yfinance loader
         if: github.event_name == 'workflow_dispatch' || steps.london_time.outputs.should_run == 'true'
         env:
