@@ -6,7 +6,7 @@ import streamlit as st
 from app_auth import render_logout_button, require_shared_password
 from motherduck_utils import connect_md
 
-DEFAULT_TICKER = "VWRP"
+DEFAULT_TICKER = "VWRP.L"
 RANGE_OPTIONS = {
     "1M": pd.DateOffset(months=1),
     "6M": pd.DateOffset(months=6),
@@ -35,6 +35,9 @@ ETF_INFO_FIELDS = [
     "Inception Date",
     "Active",
 ]
+TABLE_HEADER_HEIGHT = 35
+TABLE_ROW_HEIGHT = 35
+TABLE_PADDING = 10
 
 
 st.set_page_config(page_title="Clear ETF Explorer", layout="wide")
@@ -80,6 +83,20 @@ def fetch_etf_metadata(ticker: str) -> pd.DataFrame:
         limit 1
     """
     return get_connection().execute(sql, [ticker]).df()
+
+
+@st.cache_data(show_spinner=False)
+def fetch_etf_options() -> list[tuple[str, str]]:
+    sql = """
+        select
+            ticker,
+            fund_name
+        from marts.dim_etf
+        where ticker is not null
+        order by ticker
+    """
+    rows = get_connection().execute(sql).fetchall()
+    return [(str(ticker), str(fund_name or "")) for ticker, fund_name in rows]
 
 
 @st.cache_data(show_spinner=False)
@@ -151,6 +168,16 @@ def format_etf_info(metadata: pd.DataFrame) -> pd.DataFrame:
     return info_table.dropna(subset=["Value"])
 
 
+def render_full_table(data: pd.DataFrame) -> None:
+    table_height = TABLE_HEADER_HEIGHT + (len(data) * TABLE_ROW_HEIGHT) + TABLE_PADDING
+    st.dataframe(
+        data,
+        use_container_width=True,
+        hide_index=True,
+        height=table_height,
+    )
+
+
 def build_price_series(price_history: pd.DataFrame, chart_range: str) -> pd.DataFrame:
     history = price_history.copy()
     history["trading_date"] = pd.to_datetime(history["trading_date"])
@@ -184,15 +211,10 @@ def load_etf_data(ticker: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
     return metadata, geography, sectors, price_history
 
 
-def normalize_ticker_input(ticker: str) -> str:
-    normalized_ticker = ticker.strip().upper()
-    if not normalized_ticker:
-        return ""
-
-    if "." in normalized_ticker:
-        return normalized_ticker
-
-    return f"{normalized_ticker}.L"
+def format_ticker_label(option: tuple[str, str]) -> str:
+    ticker, fund_name = option
+    display_ticker = ticker[:-2] if ticker.endswith(".L") else ticker
+    return f"{display_ticker} - {fund_name}" if fund_name else display_ticker
 
 
 def main() -> None:
@@ -202,28 +224,45 @@ def main() -> None:
     st.title("Clear ETF Explorer")
     st.caption("Search ETF metadata, geography, sectors and performance.")
 
+    try:
+        etf_options = fetch_etf_options()
+    except Exception as exc:
+        st.error(
+            "Could not load the ETF list. Make sure `MOTHERDUCK_TOKEN` is set and the database is reachable."
+        )
+        st.exception(exc)
+        st.stop()
+
+    if not etf_options:
+        st.error("No ETFs are available to select.")
+        st.stop()
+
     if "selected_ticker" not in st.session_state:
         st.session_state.selected_ticker = DEFAULT_TICKER
     if "loaded_ticker" not in st.session_state:
         st.session_state.loaded_ticker = None
 
+    option_tickers = [ticker for ticker, _ in etf_options]
+    if st.session_state.selected_ticker not in option_tickers:
+        st.session_state.selected_ticker = option_tickers[0]
+
     with st.form("ticker-form"):
-        ticker_input = st.text_input("ETF ticker", value=st.session_state.selected_ticker)
+        selected_option = st.selectbox(
+            "ETF ticker",
+            etf_options,
+            index=option_tickers.index(st.session_state.selected_ticker),
+            format_func=format_ticker_label,
+        )
         submitted = st.form_submit_button("Load ETF")
 
     if submitted:
-        raw_ticker = ticker_input.strip().upper()
-        st.session_state.selected_ticker = raw_ticker
-
-        if not raw_ticker:
-            st.warning("Enter an ETF ticker to continue.")
-            st.stop()
-
-        st.session_state.loaded_ticker = normalize_ticker_input(raw_ticker)
+        selected_ticker, _ = selected_option
+        st.session_state.selected_ticker = selected_ticker
+        st.session_state.loaded_ticker = selected_ticker
 
     ticker = st.session_state.loaded_ticker
     if not ticker:
-        st.info("Enter a ticker and click `Load ETF`")
+        st.info("Choose an ETF and click `Load ETF`.")
         st.stop()
 
     try:
@@ -240,7 +279,7 @@ def main() -> None:
         st.stop()
 
     st.subheader("ETF Info")
-    st.dataframe(format_etf_info(metadata), use_container_width=True, hide_index=True)
+    render_full_table(format_etf_info(metadata))
 
     left_col, right_col = st.columns(2)
 
@@ -249,14 +288,14 @@ def main() -> None:
         if geography.empty:
             st.info("No geography exposure data available.")
         else:
-            st.dataframe(geography, use_container_width=True, hide_index=True)
+            render_full_table(geography)
 
     with right_col:
         st.subheader("Sectors")
         if sectors.empty:
             st.info("No sector exposure data available.")
         else:
-            st.dataframe(sectors, use_container_width=True, hide_index=True)
+            render_full_table(sectors)
 
     st.subheader("Price History")
     range_labels = list(RANGE_OPTIONS.keys())
