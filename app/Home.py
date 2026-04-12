@@ -3,9 +3,10 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from app_auth import render_logout_button, require_shared_password
 from motherduck_utils import connect_md
 
-DEFAULT_TICKER = "VWRP.L"
+DEFAULT_TICKER = "VWRP"
 RANGE_OPTIONS = {
     "1M": pd.DateOffset(months=1),
     "6M": pd.DateOffset(months=6),
@@ -86,7 +87,6 @@ def fetch_geography_exposure(ticker: str) -> pd.DataFrame:
     sql = """
         select
             geography.geography_name as Geography,
-            geography.geography_group as "Geography Group",
             round(bridge.exposure_weight * 100, 2) as "Exposure Weight (%)"
         from marts.bridge_etf_geography as bridge
         inner join marts.dim_etf as etf
@@ -120,9 +120,9 @@ def fetch_sector_exposure(ticker: str) -> pd.DataFrame:
 def fetch_price_history(ticker: str) -> pd.DataFrame:
     sql = """
         select
-            cast(full_date as date) as trading_date,
-            close_price
-        from reports.daily_prices
+            trading_date,
+            coalesce(adj_close_price, close_price) as price_value
+        from stg.stg_yfinance
         where upper(ticker) = upper(?)
         order by trading_date
     """
@@ -151,10 +151,10 @@ def format_etf_info(metadata: pd.DataFrame) -> pd.DataFrame:
     return info_table.dropna(subset=["Value"])
 
 
-def build_performance_series(price_history: pd.DataFrame, chart_range: str) -> pd.DataFrame:
+def build_price_series(price_history: pd.DataFrame, chart_range: str) -> pd.DataFrame:
     history = price_history.copy()
     history["trading_date"] = pd.to_datetime(history["trading_date"])
-    history = history.dropna(subset=["close_price"]).sort_values("trading_date")
+    history = history.dropna(subset=["price_value"]).sort_values("trading_date")
 
     if history.empty:
         return history
@@ -168,12 +168,9 @@ def build_performance_series(price_history: pd.DataFrame, chart_range: str) -> p
     if history.empty:
         return history
 
-    base_price = history["close_price"].iloc[0]
-    if not base_price:
-        return pd.DataFrame(columns=["Date", "Performance (%)"])
-
-    history["Performance (%)"] = ((history["close_price"] / base_price) - 1) * 100
-    return history.rename(columns={"trading_date": "Date"})[["Date", "Performance (%)"]]
+    return history.rename(
+        columns={"trading_date": "Date", "price_value": "Adjusted Close Price"}
+    )[["Date", "Adjusted Close Price"]]
 
 
 def load_etf_data(ticker: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -187,26 +184,46 @@ def load_etf_data(ticker: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
     return metadata, geography, sectors, price_history
 
 
+def normalize_ticker_input(ticker: str) -> str:
+    normalized_ticker = ticker.strip().upper()
+    if not normalized_ticker:
+        return ""
+
+    if "." in normalized_ticker:
+        return normalized_ticker
+
+    return f"{normalized_ticker}.L"
+
+
 def main() -> None:
+    require_shared_password()
+    render_logout_button()
+
     st.title("Clear ETF Explorer")
-    st.caption("Query ETF metadata, geography, sectors, and performance directly from MotherDuck.")
+    st.caption("Search ETF metadata, geography, sectors and performance.")
 
     if "selected_ticker" not in st.session_state:
         st.session_state.selected_ticker = DEFAULT_TICKER
+    if "loaded_ticker" not in st.session_state:
+        st.session_state.loaded_ticker = None
 
     with st.form("ticker-form"):
         ticker_input = st.text_input("ETF ticker", value=st.session_state.selected_ticker)
         submitted = st.form_submit_button("Load ETF")
 
-    if not submitted:
-        st.info("Enter a ticker and click `Load ETF` to query MotherDuck.")
-        st.stop()
+    if submitted:
+        raw_ticker = ticker_input.strip().upper()
+        st.session_state.selected_ticker = raw_ticker
 
-    ticker = ticker_input.strip().upper()
-    st.session_state.selected_ticker = ticker
+        if not raw_ticker:
+            st.warning("Enter an ETF ticker to continue.")
+            st.stop()
 
+        st.session_state.loaded_ticker = normalize_ticker_input(raw_ticker)
+
+    ticker = st.session_state.loaded_ticker
     if not ticker:
-        st.warning("Enter an ETF ticker to continue.")
+        st.info("Enter a ticker and click `Load ETF`")
         st.stop()
 
     try:
@@ -241,19 +258,25 @@ def main() -> None:
         else:
             st.dataframe(sectors, use_container_width=True, hide_index=True)
 
-    st.subheader("Performance")
-    chart_range = st.radio("Chart range", list(RANGE_OPTIONS.keys()), horizontal=True)
+    st.subheader("Price History")
+    range_labels = list(RANGE_OPTIONS.keys())
+    chart_range = st.radio(
+        "Chart range",
+        range_labels,
+        index=range_labels.index("All Time"),
+        horizontal=True,
+    )
 
     if price_history.empty:
         st.info("No price history available for this ETF.")
         return
 
-    performance_series = build_performance_series(price_history, chart_range)
-    if performance_series.empty:
+    price_series = build_price_series(price_history, chart_range)
+    if price_series.empty:
         st.info("Not enough price history to draw the chart.")
         return
 
-    st.line_chart(performance_series, x="Date", y="Performance (%)", use_container_width=True)
+    st.line_chart(price_series, x="Date", y="Adjusted Close Price", use_container_width=True)
 
 
 if __name__ == "__main__":

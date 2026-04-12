@@ -5,6 +5,8 @@ import duckdb
 
 DEFAULT_DB_PATH = "md:clear_etf"
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
+SECRETS_FILE = Path(__file__).resolve().parents[1] / ".streamlit" / "secrets.toml"
+LOCAL_SETTINGS: dict[str, str] = {}
 
 
 def load_repo_env(env_file: Path) -> None:
@@ -32,7 +34,28 @@ def load_repo_env(env_file: Path) -> None:
             os.environ.setdefault(key, value)
 
 
+def load_local_settings(settings_file: Path) -> dict[str, str]:
+    if not settings_file.exists():
+        return {}
+
+    settings: dict[str, str] = {}
+    for raw_line in settings_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+
+        if key and value:
+            settings[key] = value
+
+    return settings
+
+
 load_repo_env(ENV_FILE)
+LOCAL_SETTINGS = load_local_settings(SECRETS_FILE)
 
 
 def get_streamlit_secret(name: str) -> str | None:
@@ -48,16 +71,27 @@ def get_streamlit_secret(name: str) -> str | None:
     return None
 
 
+def get_setting(name: str) -> str | None:
+    env_value = os.getenv(name)
+    if env_value:
+        return env_value
+
+    local_value = LOCAL_SETTINGS.get(name)
+    if local_value:
+        return local_value
+
+    return get_streamlit_secret(name)
+
+
 def connect_md(database_path: str | None = None) -> duckdb.DuckDBPyConnection:
-    token = os.getenv("MOTHERDUCK_TOKEN") or get_streamlit_secret("MOTHERDUCK_TOKEN")
+    token = get_setting("MOTHERDUCK_TOKEN")
     if not token:
-        raise RuntimeError("MOTHERDUCK_TOKEN env var is required.")
+        raise RuntimeError("MOTHERDUCK_TOKEN must be set in the environment or Streamlit secrets.")
 
     escaped_token = token.replace("'", "''")
     target_database = (
         database_path
-        or os.getenv("MOTHERDUCK_DATABASE")
-        or get_streamlit_secret("MOTHERDUCK_DATABASE")
+        or get_setting("MOTHERDUCK_DATABASE")
         or DEFAULT_DB_PATH
     )
 

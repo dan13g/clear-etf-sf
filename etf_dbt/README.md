@@ -46,8 +46,36 @@ streamlit run app/Home.py
 
 For local secrets, create `.streamlit/secrets.toml` from `.streamlit/secrets.toml.example` or use a repo-root `.env`.
 
+Minimum local config:
+
+```toml
+MOTHERDUCK_TOKEN = "your-motherduck-token"
+MOTHERDUCK_DATABASE = "md:clear_etf"
+APP_PASSWORD = "choose-a-shared-password"
+```
+
+The app now requires a single shared password for every user. Store it in `.streamlit/secrets.toml` for local development or set `APP_PASSWORD` as an environment variable.
+
 For Streamlit Community Cloud, set:
 - Main file path: `app/Home.py`
 - App dependency file: `app/requirements.txt`
 - Secret `MOTHERDUCK_TOKEN`
 - Optional secret `MOTHERDUCK_DATABASE=md:clear_etf`
+- Secret `APP_PASSWORD`
+
+## Deployment Checklist
+1. Push the repo to GitHub.
+2. In Streamlit Community Cloud, create a new app from the repo.
+3. Set the main file path to `app/Home.py`.
+4. If prompted for dependencies, point Streamlit at `app/requirements.txt`.
+5. In the app settings, add these secrets:
+
+```toml
+MOTHERDUCK_TOKEN = "your-motherduck-token"
+MOTHERDUCK_DATABASE = "md:clear_etf"
+APP_PASSWORD = "choose-a-shared-password"
+```
+
+6. Deploy the app and confirm you see the password screen before the ETF search form.
+
+This is a lightweight shared-password gate, which is useful for small private apps but is not a substitute for full user authentication.
