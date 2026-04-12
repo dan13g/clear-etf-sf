@@ -30,7 +30,7 @@ def main() -> None:
     st.markdown(
         """
         1. Enter an ETF ticker in the search box on the main page.
-        2. You can enter a ticker sucj as : `VWRL`;
+        2. You can enter a ticker such as `VWRL`.
         3. Click `Load ETF` to fetch the data.
         4. Review the top tables for ETF details, geography, and sectors.
         5. Use the chart range selector to switch between `1M`, `6M`, `1Y`, and `All Time`.
@@ -54,6 +54,9 @@ def main() -> None:
         - If price history or exposure data is missing, it usually means the source data is incomplete for that ETF.
         """
     )
+
+    st.markdown("---")
+    st.caption("Copyright (c) Intelken 2026")
 
 
 if __name__ == "__main__":

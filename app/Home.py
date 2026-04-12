@@ -150,16 +150,16 @@ def format_etf_info(metadata: pd.DataFrame) -> pd.DataFrame:
     row = metadata.iloc[0].copy()
 
     for column in ["Hedged", "UCITS", "Active"]:
-        value = row[column]
+        value = row.get(column)
         if pd.isna(value):
             row[column] = None
         else:
             row[column] = "Yes" if bool(value) else "No"
 
-    if pd.notna(row["TER"]):
+    if pd.notna(row.get("TER")):
         row["TER"] = f"{row['TER']:.2%}"
 
-    if pd.notna(row["Inception Date"]):
+    if pd.notna(row.get("Inception Date")):
         row["Inception Date"] = pd.to_datetime(row["Inception Date"]).date().isoformat()
 
     info_table = pd.DataFrame(
