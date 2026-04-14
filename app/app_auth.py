@@ -12,7 +12,7 @@ AUTH_STATE_KEY = "is_authenticated"
 def require_shared_password() -> None:
     configured_password = get_setting("APP_PASSWORD")
     if not configured_password:
-        st.title("Clear ETF Explorer")
+        st.title("Clear ETF")
         st.error(
             "This app is locked, but `APP_PASSWORD` has not been configured. "
             "Add it to `.streamlit/secrets.toml` locally or your deployment secrets."
@@ -22,7 +22,7 @@ def require_shared_password() -> None:
     if st.session_state.get(AUTH_STATE_KEY):
         return
 
-    st.title("Clear ETF Explorer")
+    st.title("Clear ETF")
     st.caption("Enter the shared password to continue.")
 
     with st.form("shared-password-form"):
