@@ -65,7 +65,7 @@ def make_unique_identifiers(values) -> list[str]:
 def normalize_dataframe_for_duckdb(dataframe: pd.DataFrame) -> pd.DataFrame:
     normalized = dataframe.copy()
 
-    # DuckDB 1.4.x does not accept pandas' newer "str" extension dtype.
+    # MotherDuck-compatible DuckDB builds can reject pandas' newer "str" extension dtype.
     for column_name in normalized.select_dtypes(include=["string", "str"]).columns:
         normalized[column_name] = normalized[column_name].astype("object")
         normalized[column_name] = normalized[column_name].where(

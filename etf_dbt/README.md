@@ -1,7 +1,7 @@
 # ClearETF
 
 ## Install (local)
-pip install "dbt-core>=1.8" "dbt-duckdb>=1.5.2" duckdb
+pip install "dbt-core>=1.8" "dbt-duckdb>=1.5.2" "duckdb==1.5.1"
 
 ## profiles.yml (MotherDuck)
 Create at:
@@ -58,7 +58,7 @@ The app now requires a single shared password for every user. Store it in `.stre
 
 For Streamlit Community Cloud, set:
 - Main file path: `app/Home.py`
-- App dependency file: `app/requirements.txt`
+- App dependency file: `app/requirements.txt` (pins `duckdb==1.5.1` for MotherDuck compatibility)
 - Secret `MOTHERDUCK_TOKEN`
 - Optional secret `MOTHERDUCK_DATABASE=md:clear_etf`
 - Secret `APP_PASSWORD`
