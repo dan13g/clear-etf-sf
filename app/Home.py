@@ -221,7 +221,7 @@ def main() -> None:
     require_shared_password()
     render_logout_button()
 
-    st.title("ClearETF")
+    st.title("Clear ETF")
     st.subheader("Portfolio Overlap and Fee Auditor")
     st.caption("Search ETF metadata, geography, sectors and performance.")
 

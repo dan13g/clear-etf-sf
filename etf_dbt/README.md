@@ -1,4 +1,4 @@
-# ClearETF
+# Clear ETF
 
 ## Install (local)
 pip install "dbt-core>=1.8" "dbt-duckdb>=1.5.2" "duckdb==1.5.1"
