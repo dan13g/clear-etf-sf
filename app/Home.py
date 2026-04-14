@@ -40,7 +40,7 @@ TABLE_ROW_HEIGHT = 35
 TABLE_PADDING = 10
 
 
-st.set_page_config(page_title="ClearETF", layout="wide")
+st.set_page_config(page_title="Clear ETF", layout="wide")
 
 
 @st.cache_resource(show_spinner=False)
