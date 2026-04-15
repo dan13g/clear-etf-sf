@@ -3,7 +3,7 @@ from pathlib import Path
 
 import duckdb
 
-DEFAULT_DB_PATH = "md:clear_etf"
+DEFAULT_DB_PATH = "md:market_intel"
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 SECRETS_FILE = Path(__file__).resolve().parents[1] / ".streamlit" / "secrets.toml"
 LOCAL_SETTINGS: dict[str, str] = {}

@@ -6,14 +6,14 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-DEFAULT_DB_PATH = "md:clear_etf"
+DEFAULT_DB_PATH = "md:market_intel"
 DEFAULT_SCHEMA = "raw"
-DEFAULT_WORKBOOK = Path(__file__).resolve().parents[1] / "data" / "clear_etf_metadata.xlsx"
+DEFAULT_WORKBOOK = Path(__file__).resolve().parents[1] / "data" / "market_intel_metadata.xlsx"
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Load every sheet from the Clear ETF metadata workbook into MotherDuck."
+        description="Load every sheet from the Market Intel metadata workbook into MotherDuck."
     )
     parser.add_argument(
         "--workbook",
@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--database",
         default=os.getenv("MOTHERDUCK_DATABASE", DEFAULT_DB_PATH),
-        help="MotherDuck database path, for example md:clear_etf.",
+        help="MotherDuck database path, for example md:market_intel.",
     )
     parser.add_argument(
         "--schema",
@@ -125,7 +125,7 @@ def main() -> None:
     if not workbook.exists():
         raise FileNotFoundError(
             f"Workbook not found: {workbook}. "
-            "For GitHub Actions, make sure data/clear_etf_metadata.xlsx is committed to the repository."
+            "For GitHub Actions, make sure data/market_intel_metadata.xlsx is committed to the repository."
         )
 
     print(f"Connecting to MotherDuck database {args.database}...")

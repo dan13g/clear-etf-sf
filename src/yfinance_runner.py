@@ -10,7 +10,7 @@ TICKERS = [
     "AGGG.L",
 ]
 
-DB_PATH = "md:clear_etf"
+DB_PATH = "md:market_intel"
 SCHEMA = "raw"
 TABLE = "prices_yfinance"
 

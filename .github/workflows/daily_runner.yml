@@ -59,7 +59,7 @@ jobs:
             outputs:
               dev:
                 type: duckdb
-                path: "md:clear_etf"
+                path: "md:market_intel"
                 token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
                 threads: 4
           YAML

@@ -8,7 +8,7 @@ sources:
       - name: prices_yfinance
         description: Daily ETF market prices ingested from yfinance.
       - name: etf
-        description: ETF reference metadata loaded from the Clear ETF workbook.
+        description: ETF reference metadata loaded from the Market Intel workbook.
       - name: geography
         description: Latest ETF geography exposure weights loaded from the workbook.
       - name: sector
