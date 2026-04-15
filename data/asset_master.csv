@@ -1,0 +1,19 @@
+ticker,asset_name,asset_type,asset_subtype,region,country,currency,provider_name,exchange,is_active
+VWRP.L,Vanguard FTSE All-World UCITS ETF Acc,ETF,Global Equity ETF,Global,IE,USD,yfinance,LSE,True
+VUAG.L,Vanguard S&P 500 UCITS ETF Acc,ETF,US Equity ETF,United States,IE,USD,yfinance,LSE,True
+SSAC.L,iShares MSCI ACWI UCITS ETF,ETF,Global Equity ETF,Global,IE,USD,yfinance,LSE,True
+EIMI.L,iShares Core MSCI EM IMI UCITS ETF,ETF,Emerging Markets ETF,Emerging Markets,IE,USD,yfinance,LSE,True
+AGGG.L,iShares Core Global Aggregate Bond UCITS ETF,ETF,Global Bond ETF,Global,IE,USD,yfinance,LSE,True
+AAPL,Apple Inc,Stock,Large Cap Stock,United States,US,USD,yfinance,NASDAQ,True
+MSFT,Microsoft Corporation,Stock,Large Cap Stock,United States,US,USD,yfinance,NASDAQ,True
+NVDA,NVIDIA Corporation,Stock,Large Cap Stock,United States,US,USD,yfinance,NASDAQ,True
+AMZN,Amazon.com Inc,Stock,Large Cap Stock,United States,US,USD,yfinance,NASDAQ,True
+TSLA,Tesla Inc,Stock,Large Cap Stock,United States,US,USD,yfinance,NASDAQ,True
+^GSPC,S&P 500,Index,Equity Index,United States,US,USD,yfinance,SNP,True
+^IXIC,Nasdaq Composite,Index,Equity Index,United States,US,USD,yfinance,NASDAQ,True
+^FTSE,FTSE 100,Index,Equity Index,United Kingdom,GB,GBP,yfinance,LSE,True
+GBPUSD=X,GBP/USD,FX,Currency Pair,Global,,USD,yfinance,FX,True
+EURUSD=X,EUR/USD,FX,Currency Pair,Global,,USD,yfinance,FX,True
+USDJPY=X,USD/JPY,FX,Currency Pair,Global,,JPY,yfinance,FX,True
+GC=F,Gold Futures,Commodity,Gold,Global,,USD,yfinance,COMEX,True
+CL=F,Crude Oil Futures,Commodity,Oil,Global,,USD,yfinance,NYMEX,True

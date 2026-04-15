@@ -1,16 +1,13 @@
-name: daily_runner
+name: reference_data_runner
 
 on:
   workflow_dispatch:
-  schedule:
-    # Run at 22:00 UTC/GMT, Monday through Friday.
-    - cron: "0 22 * * 1-5"
 
 permissions:
   contents: read
 
 jobs:
-  yfinance-runner:
+  reference-data-runner:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,10 +34,15 @@ jobs:
             exit 1
           fi
 
-      - name: Run daily price loader
+      - name: Load asset master
         env:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
-        run: python src/load_daily_prices.py
+        run: python src/load_asset_master.py
+
+      - name: Load ETF metadata workbook
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python src/load_etf_metadata.py
 
       - name: Create dbt profile
         shell: bash

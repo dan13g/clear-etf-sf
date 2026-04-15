@@ -19,4 +19,4 @@ select
     cast(inception_date as date) as inception_date,
     cast(is_active as varchar) as is_active,
     cast(notes as varchar) as notes
-from {{ source('motherduck_raw', 'etf') }}
+from {{ source('motherduck_raw', 'etf_metadata') }}

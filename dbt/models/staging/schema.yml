@@ -1,6 +1,16 @@
 version: 2
 
 models:
+  - name: stg_asset_master
+    description: Cleaned tracked-asset master metadata for future conformed asset dimensions.
+    columns:
+      - name: ticker
+        tests:
+          - not_null
+          - unique
+      - name: asset_type
+        tests:
+          - not_null
   - name: stg_yfinance
     description: Cleaned daily market prices with consistent field names for downstream calculations.
     columns:

@@ -7,4 +7,4 @@ select
     cast(close as double) as close_price,
     cast(adj_close as double) as adj_close_price,
     cast(volume as double) as volume
-from {{ source('motherduck_raw', 'prices_yfinance') }}
+from {{ source('motherduck_raw', 'asset_prices_yfinance') }}
