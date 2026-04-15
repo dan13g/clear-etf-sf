@@ -2,7 +2,7 @@ name: "market_intel"
 version: "3.0.0"
 config-version: 2
 
-profile: "dbt"
+profile: "market_intel"
 
 model-paths: ["models"]
 macro-paths: ["macros"]
