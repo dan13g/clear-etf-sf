@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir -p "$HOME/.dbt"
           cat > "$HOME/.dbt/profiles.yml" <<'YAML'
-          etf_dbt:
+          dbt:
             target: dev
             outputs:
               dev:
@@ -65,7 +65,7 @@ jobs:
           YAML
 
       - name: Run dbt
-        working-directory: etf_dbt
+        working-directory: dbt
         env:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: |

@@ -7,5 +7,5 @@ __pycache__/
 *.pyc
 logs/
 src/logs/
-etf_dbt/logs/
-etf_dbt/target/
+dbt/logs/
+dbt/target/

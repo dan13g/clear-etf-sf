@@ -1,14 +1,14 @@
-name: "etf_dbt"
+name: "dbt"
 version: "3.0.0"
 config-version: 2
 
-profile: "etf_dbt"
+profile: "dbt"
 
 model-paths: ["models"]
 macro-paths: ["macros"]
 
 models:
-  etf_dbt:
+  dbt:
     raw:
       +materialized: table
       +schema: raw

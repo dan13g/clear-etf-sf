@@ -11,7 +11,7 @@ Create at:
 Example:
 
 ```yaml
-etf_dbt:
+dbt:
   target: dev
   outputs:
     dev:
