@@ -68,12 +68,14 @@ jobs:
                 token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
                 threads: 4
           YAML
+          echo "Generated profiles.yml:"
+          cat "$HOME/.dbt/profiles.yml"
 
       - name: Run dbt
         working-directory: dbt
         env:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: |
-          dbt debug
+          dbt debug --profile market_intel
           dbt deps
-          dbt run
+          dbt run --profile market_intel
