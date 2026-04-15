@@ -59,7 +59,7 @@ jobs:
         run: |
           mkdir -p "$HOME/.dbt"
           cat > "$HOME/.dbt/profiles.yml" <<'YAML'
-          dbt:
+          market_intel:
             target: dev
             outputs:
               dev:
