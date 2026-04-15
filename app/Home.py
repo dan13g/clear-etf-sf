@@ -137,11 +137,11 @@ def fetch_sector_exposure(ticker: str) -> pd.DataFrame:
 def fetch_price_history(ticker: str) -> pd.DataFrame:
     sql = """
         select
-            trading_date,
+            full_date as trading_date,
             coalesce(adj_close_price, close_price) as price_value
-        from stg.stg_yfinance
+        from stg.stg_asset_prices
         where upper(ticker) = upper(?)
-        order by trading_date
+        order by full_date
     """
     return get_connection().execute(sql, [ticker]).df()
 

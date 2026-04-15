@@ -1,13 +1,23 @@
 select
-    upper(nullif(trim(ticker), '')) as ticker,
-    nullif(trim(asset_name), '') as asset_name,
-    nullif(trim(asset_type), '') as asset_type,
-    nullif(trim(asset_subtype), '') as asset_subtype,
-    nullif(trim(region), '') as region,
-    nullif(trim(country), '') as country,
-    nullif(trim(currency), '') as currency,
-    nullif(trim(provider_name), '') as provider_name,
-    nullif(trim(exchange), '') as exchange,
-    coalesce(is_active, true) as is_active
-from {{ ref('raw_asset_master') }}
-where nullif(trim(ticker), '') is not null
+    md5(upper(nullif(trim(cast(ticker as varchar)), ''))) as asset_key,
+    upper(nullif(trim(cast(ticker as varchar)), '')) as ticker,
+    nullif(trim(cast(asset_name as varchar)), '') as asset_name,
+    case lower(trim(cast(asset_type as varchar)))
+        when 'etf' then 'ETF'
+        when 'stock' then 'Stock'
+        when 'index' then 'Index'
+        when 'fx' then 'FX'
+        when 'commodity' then 'Commodity'
+        when 'bond proxy' then 'Bond Proxy'
+        else nullif(trim(cast(asset_type as varchar)), '')
+    end as asset_type,
+    nullif(trim(cast(asset_subtype as varchar)), '') as asset_subtype,
+    nullif(trim(cast(region as varchar)), '') as region,
+    nullif(trim(cast(country as varchar)), '') as country,
+    nullif(trim(cast(currency as varchar)), '') as currency,
+    nullif(trim(cast(provider_name as varchar)), '') as provider_name,
+    nullif(trim(cast(exchange as varchar)), '') as exchange,
+    coalesce(cast(is_active as boolean), true) as is_active
+from {{ source('motherduck_raw', 'asset_master') }}
+where nullif(trim(cast(ticker as varchar)), '') is not null
+  and coalesce(cast(is_active as boolean), true)

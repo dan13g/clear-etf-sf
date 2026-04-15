@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: dim_asset
+    description: Master asset dimension at one row per tracked instrument.
+    columns:
+      - name: asset_key
+        tests:
+          - not_null
+          - unique
+      - name: ticker
+        tests:
+          - not_null
+          - unique
+  - name: dim_date
+    description: Calendar dimension spanning the asset price history range.
+    columns:
+      - name: date_key
+        tests:
+          - not_null
+          - unique
+      - name: full_date
+        tests:
+          - not_null
+          - unique
+  - name: dim_asset_classification
+    description: Derived classification layer with role, risk, and trend buckets by asset.
+    columns:
+      - name: asset_key
+        tests:
+          - not_null
+          - unique
+  - name: dim_etf_profile
+    description: ETF-specific metadata layer linked to the shared asset dimension.
+    columns:
+      - name: asset_key
+        tests:
+          - not_null
+          - unique
+      - name: equivalence_group_code
+        tests:
+          - not_null

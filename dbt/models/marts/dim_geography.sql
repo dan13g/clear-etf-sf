@@ -1,7 +1,7 @@
 with geographies as (
     select distinct
         geography_name
-    from {{ ref('stg_geography') }}
+    from {{ ref('stg_etf_geography') }}
 )
 select
     md5(lower(geography_name)) as geography_key,

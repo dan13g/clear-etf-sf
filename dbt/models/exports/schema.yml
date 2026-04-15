@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: export_market_returns
+    description: Export-ready asset return extract.
+  - name: export_market_risk
+    description: Export-ready asset risk extract.
+  - name: export_market_trends
+    description: Export-ready asset trend extract.
+  - name: export_market_correlations
+    description: Export-ready cross-asset correlation extract.
+  - name: export_fx_intelligence
+    description: Export-ready FX intelligence extract.
+  - name: export_market_regime
+    description: Export-ready regime extract.
+  - name: export_etf_overlap
+    description: Export-ready ETF overlap extract.
+  - name: export_etf_equivalence
+    description: Export-ready ETF equivalence extract.
+  - name: export_fee_benchmarks
+    description: Export-ready ETF TER benchmarking extract.

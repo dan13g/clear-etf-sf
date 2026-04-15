@@ -1,10 +1,12 @@
 select
-    etf_code,
+    asset_key,
     ticker,
+    etf_code,
     isin,
     fund_name,
     provider_name,
     index_code,
+    index_name,
     equivalence_group_code,
     relationship_to_group,
     asset_class,

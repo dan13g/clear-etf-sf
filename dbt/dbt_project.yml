@@ -1,4 +1,4 @@
-name: "dbt"
+name: "market_intel"
 version: "3.0.0"
 config-version: 2
 
@@ -8,19 +8,22 @@ model-paths: ["models"]
 macro-paths: ["macros"]
 
 models:
-  dbt:
-    raw:
-      +materialized: table
-      +schema: raw
+  market_intel:
     staging:
       +materialized: table
       +schema: stg
+    dimensions:
+      +materialized: table
+      +schema: dimensions
     intermediate:
       +materialized: table
       +schema: int
     marts:
       +materialized: table
       +schema: marts
+    exports:
+      +materialized: table
+      +schema: exports
     reports:
       +materialized: table
       +schema: reports

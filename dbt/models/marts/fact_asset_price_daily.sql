@@ -1,6 +1,7 @@
 select
-    ticker,
-    full_date as trading_date,
+    date_key,
+    asset_key,
+    full_date,
     open_price,
     high_price,
     low_price,

@@ -2,7 +2,7 @@ with indexes as (
     select
         index_code,
         min(asset_class) as asset_class
-    from {{ ref('stg_etf') }}
+    from {{ ref('dim_etf_profile') }}
     where index_code is not null
     group by 1
 )

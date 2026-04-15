@@ -17,12 +17,12 @@ def main() -> None:
 
     st.subheader("How It Works")
     st.write(
-        "Market Intel lets you look up a single ETF and view its key metadata, "
-        "geographic exposure, sector exposure, and price history in one place."
+        "Market Intel now sits on a broader asset dataset covering ETFs, stocks, indices, "
+        "FX, and commodities, while the app currently focuses on ETF lookup and comparison."
     )
     st.write(
         "Price history is sourced from the "
-        "Yahoo Finance dataset in the warehouse and the chart uses adjusted close price "
+        "shared asset-price layer in the warehouse and the chart uses adjusted close price "
         "when it is available."
     )
 

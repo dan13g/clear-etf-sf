@@ -1,9 +1,9 @@
 select
-    lower(nullif(trim(source_group_code), '')) as source_group_code,
-    lower(nullif(trim(target_group_code), '')) as target_group_code,
-    lower(nullif(trim(relationship_type), '')) as relationship_type,
-    priority_rank,
-    nullif(trim(notes), '') as notes
-from {{ ref('raw_equivalence_group_relationships') }}
-where nullif(trim(source_group_code), '') is not null
-  and nullif(trim(target_group_code), '') is not null
+    lower(nullif(trim(cast(source_group_code as varchar)), '')) as source_group_code,
+    lower(nullif(trim(cast(target_group_code as varchar)), '')) as target_group_code,
+    lower(nullif(trim(cast(relationship_type as varchar)), '')) as relationship_type,
+    cast(priority_rank as integer) as priority_rank,
+    nullif(trim(cast(notes as varchar)), '') as notes
+from {{ source('motherduck_raw', 'equivalence_group_relationships') }}
+where nullif(trim(cast(source_group_code as varchar)), '') is not null
+  and nullif(trim(cast(target_group_code as varchar)), '') is not null

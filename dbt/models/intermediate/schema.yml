@@ -1,15 +1,26 @@
 version: 2
 
 models:
-  - name: int_etf_daily_metrics
-    description: ETF daily performance metrics at ticker by trading date grain.
+  - name: int_asset_returns
+    description: Asset-level return series and trailing horizon returns.
     columns:
-      - name: ticker
+      - name: asset_key
         tests:
           - not_null
-      - name: trading_date
+      - name: full_date
         tests:
           - not_null
-      - name: close_price
-        tests:
-          - not_null
+  - name: int_asset_volatility
+    description: Asset-level rolling realized volatility and Sharpe proxy metrics.
+  - name: int_asset_drawdown
+    description: Asset-level rolling drawdown measures.
+  - name: int_asset_trend_inputs
+    description: Asset-level trend and moving-average signals.
+  - name: int_asset_pair_returns
+    description: Pairwise daily return intersections used for correlation models.
+  - name: int_asset_correlation_30d
+    description: Latest 30-observation pairwise return correlations.
+  - name: int_asset_correlation_90d
+    description: Latest 90-observation pairwise return correlations.
+  - name: int_asset_risk_enriched
+    description: Combined return and risk metric layer for downstream marts.

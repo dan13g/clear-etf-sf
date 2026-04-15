@@ -1,7 +1,7 @@
 with providers as (
     select distinct
         provider_name
-    from {{ ref('stg_etf') }}
+    from {{ ref('dim_etf_profile') }}
     where provider_name is not null
 )
 select
