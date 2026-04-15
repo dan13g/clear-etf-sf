@@ -37,10 +37,20 @@ jobs:
             exit 1
           fi
 
+      - name: Load asset master
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python src/load_asset_master.py
+
       - name: Run daily price loader
         env:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python src/load_daily_prices.py
+
+      - name: Load ETF metadata workbook
+        env:
+          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+        run: python src/load_etf_metadata.py
 
       - name: Create dbt profile
         shell: bash
