@@ -28,10 +28,13 @@ dbt:
 From this folder:
 
 ```bash
-dbt debug
-dbt run --select raw
-dbt run --select staging
+.\dbt.cmd debug
+.\dbt.cmd run --select raw
+.\dbt.cmd run --select staging
 ```
+
+If you prefer the raw executable, use `..\venv\Scripts\dbt.exe`.
+Plain `dbt` may still resolve to the dbt Cloud CLI unless your repo virtualenv is activated first.
 
 ## Notes
 - Raw models 
