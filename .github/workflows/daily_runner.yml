@@ -3,8 +3,8 @@ name: daily_runner
 on:
   workflow_dispatch:
   schedule:
-    # Run at 22:00 UTC/GMT, Monday through Friday.
-    - cron: "0 22 * * 1-5"
+    # Run at 22:00 UTC/GMT every Sunday.
+    - cron: "0 22 * * 0"
 
 permissions:
   contents: read
