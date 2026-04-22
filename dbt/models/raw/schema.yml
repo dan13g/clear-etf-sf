@@ -10,12 +10,12 @@ sources:
       - name: asset_prices_yfinance
         description: Daily market prices for tracked assets ingested from yfinance.
       - name: etf_metadata
-        description: ETF reference metadata loaded from the ClearETF workbook.
+        description: ETF reference metadata loaded from the ClearETF Google Sheet.
       - name: etf_geography
-        description: Latest ETF geography exposure weights loaded from the workbook.
+        description: Latest ETF geography exposure weights loaded from the Google Sheet.
       - name: etf_sector
-        description: Latest ETF sector exposure weights loaded from the workbook.
+        description: Latest ETF sector exposure weights loaded from the Google Sheet.
       - name: equivalence_groups
-        description: ETF equivalence group definitions loaded from the workbook.
+        description: ETF equivalence group definitions loaded from the Google Sheet.
       - name: equivalence_group_relationships
         description: Relationship map between ETF equivalence groups.

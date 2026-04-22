@@ -47,9 +47,10 @@ jobs:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: python src/load_daily_prices.py
 
-      - name: Load ETF metadata workbook
+      - name: Load ETF metadata from Google Sheets
         env:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
         run: python src/load_etf_metadata.py
 
       - name: Create dbt profile
