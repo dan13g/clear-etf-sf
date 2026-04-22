@@ -40,7 +40,7 @@ TABLE_ROW_HEIGHT = 35
 TABLE_PADDING = 10
 
 
-st.set_page_config(page_title="Market Intel", layout="wide")
+st.set_page_config(page_title="ClearETF", layout="wide")
 
 
 @st.cache_resource(show_spinner=False)
@@ -221,7 +221,7 @@ def main() -> None:
     require_shared_password()
     render_logout_button()
 
-    st.title("Market Intel")
+    st.title("ClearETF")
     st.subheader("Portfolio Overlap and Fee Auditor")
     st.caption("Search ETF metadata, geography, sectors and performance.")
 

@@ -59,12 +59,12 @@ jobs:
         run: |
           mkdir -p "$HOME/.dbt"
           cat > "$HOME/.dbt/profiles.yml" <<'YAML'
-          market_intel:
+          clear_etf:
             target: dev
             outputs:
               dev:
                 type: duckdb
-                path: "md:market_intel"
+                path: "md:clear_etf"
                 token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
                 threads: 4
           YAML
@@ -76,6 +76,6 @@ jobs:
         env:
           MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
         run: |
-          dbt debug --profile market_intel
+          dbt debug --profile clear_etf
           dbt deps
-          dbt run --profile market_intel
+          dbt run --profile clear_etf

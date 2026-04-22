@@ -1,6 +1,6 @@
-# Market Intel
+# ClearETF
 
-Market Intel is a small ETF research stack built on Python, MotherDuck, dbt, and Streamlit.
+ClearETF is a small ETF research stack built on Python, MotherDuck, dbt, and Streamlit.
 It combines curated ETF metadata with daily market prices, models that data into analytics-friendly tables, and serves a lightweight web app for exploring ETF details, exposures, and price history.
 
 ## What This Repo Does
@@ -19,7 +19,7 @@ The pipeline works like this:
 
 1. `data/asset_master.csv` defines the tracked instrument universe.
 2. `src/load_daily_prices.py` downloads historical prices for active tickers from `yfinance`.
-3. `data/market_intel_metadata.xlsx` provides curated ETF metadata and exposure mappings.
+3. `data/clear_etf_metadata.xlsx` provides curated ETF metadata and exposure mappings.
 4. The Python loaders write these datasets into the `raw` schema in MotherDuck.
 5. dbt builds staging, dimensions, intermediate models, marts, exports, and reports on top of the raw tables.
 6. `app/Home.py` queries the modeled tables in MotherDuck and renders the Streamlit UI.
@@ -35,7 +35,7 @@ The ingestion scripts live in `src/`:
 - `src/load_daily_prices.py`
   Pulls daily OHLCV history from `yfinance` for active tickers and loads `raw.asset_prices_yfinance`.
 - `src/load_etf_metadata.py`
-  Loads workbook sheets from `data/market_intel_metadata.xlsx` into:
+  Loads workbook sheets from `data/clear_etf_metadata.xlsx` into:
   `raw.etf_metadata`, `raw.etf_geography`, `raw.etf_sector`, `raw.equivalence_groups`, and `raw.equivalence_group_relationships`.
 - `src/ingestion_utils.py`
   Shared MotherDuck connection, schema creation, identifier cleanup, and dataframe normalization helpers.
@@ -85,7 +85,7 @@ The Streamlit app lives in `app/`:
 Environment variables used by the project:
 
 - `MOTHERDUCK_TOKEN`
-- `MOTHERDUCK_DATABASE` optional, defaults to `md:market_intel`
+- `MOTHERDUCK_DATABASE` optional, defaults to `md:clear_etf`
 - `MOTHERDUCK_SCHEMA` optional for loaders, defaults to `raw`
 - `APP_PASSWORD` required for the Streamlit app
 
@@ -106,7 +106,7 @@ Minimum local configuration:
 
 ```toml
 MOTHERDUCK_TOKEN = "your-motherduck-token"
-MOTHERDUCK_DATABASE = "md:market_intel"
+MOTHERDUCK_DATABASE = "md:clear_etf"
 APP_PASSWORD = "choose-a-shared-password"
 ```
 
@@ -129,12 +129,12 @@ Create a dbt profile at `~/.dbt/profiles.yml` on Mac/Linux or `%USERPROFILE%\.db
 Example profile:
 
 ```yaml
-market_intel:
+clear_etf:
   target: dev
   outputs:
     dev:
       type: duckdb
-      path: "md:market_intel"
+      path: "md:clear_etf"
       token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
       threads: 4
 ```
@@ -144,7 +144,7 @@ Then run dbt from the `dbt/` directory:
 ```bash
 .\dbt.cmd debug
 .\dbt.cmd deps
-.\dbt.cmd run --profile market_intel
+.\dbt.cmd run --profile clear_etf
 ```
 
 If your environment resolves `dbt` differently, you can also use the virtualenv executable directly.
@@ -186,7 +186,7 @@ For GitHub Actions, configure this repository secret:
 
 ## Notes
 
-- `data/market_intel_metadata.xlsx` is a required curated input and must exist for metadata loads to succeed.
+- `data/clear_etf_metadata.xlsx` is a required curated input and must exist for metadata loads to succeed.
 - `data/asset_master.csv` controls which tickers are loaded from `yfinance`.
 - The app assumes the dbt models have already been built in MotherDuck.
 - There is a more dbt-specific guide in `dbt/README.md`.

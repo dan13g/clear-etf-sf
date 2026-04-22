@@ -1,14 +1,14 @@
-name: "market_intel"
+name: "clear_etf"
 version: "3.0.0"
 config-version: 2
 
-profile: "market_intel"
+profile: "clear_etf"
 
 model-paths: ["models"]
 macro-paths: ["macros"]
 
 models:
-  market_intel:
+  clear_etf:
     staging:
       +materialized: table
       +schema: stg

@@ -14,7 +14,7 @@ from ingestion_utils import (
     quote_identifier,
 )
 
-DEFAULT_WORKBOOK = Path(__file__).resolve().parents[1] / "data" / "market_intel_metadata.xlsx"
+DEFAULT_WORKBOOK = Path(__file__).resolve().parents[1] / "data" / "clear_etf_metadata.xlsx"
 SHEET_TABLE_MAP = {
     "etf": "etf_metadata",
     "geography": "etf_geography",
@@ -36,7 +36,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--database",
         default=os.getenv("MOTHERDUCK_DATABASE", DEFAULT_DB_PATH),
-        help="MotherDuck database path, for example md:market_intel.",
+        help="MotherDuck database path, for example md:clear_etf.",
     )
     parser.add_argument(
         "--schema",
@@ -81,7 +81,7 @@ def main() -> None:
     if not workbook.exists():
         raise FileNotFoundError(
             f"Workbook not found: {workbook}. "
-            "For GitHub Actions, make sure data/market_intel_metadata.xlsx is committed to the repository."
+            "For GitHub Actions, make sure data/clear_etf_metadata.xlsx is committed to the repository."
         )
 
     print(f"Connecting to MotherDuck database {args.database}...")

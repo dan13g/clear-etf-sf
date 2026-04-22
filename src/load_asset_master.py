@@ -43,7 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--database",
         default=os.getenv("MOTHERDUCK_DATABASE", DEFAULT_DB_PATH),
-        help="MotherDuck database path, for example md:market_intel.",
+        help="MotherDuck database path, for example md:clear_etf.",
     )
     parser.add_argument(
         "--schema",

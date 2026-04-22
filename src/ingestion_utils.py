@@ -4,7 +4,7 @@ import re
 import duckdb
 import pandas as pd
 
-DEFAULT_DB_PATH = "md:market_intel"
+DEFAULT_DB_PATH = "md:clear_etf"
 DEFAULT_SCHEMA = "raw"
 
 

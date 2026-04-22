@@ -1,4 +1,4 @@
-# Market Intel
+# ClearETF
 
 ## Install (local)
 pip install "dbt-core>=1.8" "dbt-duckdb>=1.5.2" "duckdb==1.5.1"
@@ -16,7 +16,7 @@ dbt:
   outputs:
     dev:
       type: duckdb
-      path: "md:market_intel"
+      path: "md:clear_etf"
       token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
       threads: 4
 ```
@@ -53,7 +53,7 @@ Minimum local config:
 
 ```toml
 MOTHERDUCK_TOKEN = "your-motherduck-token"
-MOTHERDUCK_DATABASE = "md:market_intel"
+MOTHERDUCK_DATABASE = "md:clear_etf"
 APP_PASSWORD = "choose-a-shared-password"
 ```
 
@@ -63,7 +63,7 @@ For Streamlit Community Cloud, set:
 - Main file path: `app/Home.py`
 - App dependency file: `app/requirements.txt` (pins `duckdb==1.5.1` for MotherDuck compatibility)
 - Secret `MOTHERDUCK_TOKEN`
-- Optional secret `MOTHERDUCK_DATABASE=md:market_intel`
+- Optional secret `MOTHERDUCK_DATABASE=md:clear_etf`
 - Secret `APP_PASSWORD`
 
 ## Deployment Checklist
@@ -75,7 +75,7 @@ For Streamlit Community Cloud, set:
 
 ```toml
 MOTHERDUCK_TOKEN = "your-motherduck-token"
-MOTHERDUCK_DATABASE = "md:market_intel"
+MOTHERDUCK_DATABASE = "md:clear_etf"
 APP_PASSWORD = "choose-a-shared-password"
 ```
 

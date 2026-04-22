@@ -5,19 +5,19 @@ import streamlit as st
 from app_auth import render_logout_button, require_shared_password
 
 
-st.set_page_config(page_title="About Market Intel", layout="wide")
+st.set_page_config(page_title="About ClearETF", layout="wide")
 
 
 def main() -> None:
     require_shared_password()
     render_logout_button()
 
-    st.title("About Market Intel")
+    st.title("About ClearETF")
     st.caption("What the app does and how to use it.")
 
     st.subheader("How It Works")
     st.write(
-        "Market Intel now sits on a broader asset dataset covering ETFs, stocks, indices, "
+        "ClearETF now sits on a broader asset dataset covering ETFs, stocks, indices, "
         "FX, and commodities, while the app currently focuses on ETF lookup and comparison."
     )
     st.write(
