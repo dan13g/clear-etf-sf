@@ -164,7 +164,7 @@ The app shows:
 - sector exposure
 - historical adjusted-close price chart
 
-The app uses a shared password gate. This is useful for a lightweight private app, but it is not full user-level authentication.
+The app uses a shared password gate. This is useful for a lightweight private app, but it is not full user-level authentication
 
 ## Automation
 
