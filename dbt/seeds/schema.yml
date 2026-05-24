@@ -1,0 +1,13 @@
+version: 2
+
+seeds:
+  - name: demo_seed
+    description: Small demo seed for validating dbt seed into Snowflake.
+    columns:
+      - name: seed_id
+        tests:
+          - not_null
+          - unique
+      - name: seed_name
+        tests:
+          - not_null

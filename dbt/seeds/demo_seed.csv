@@ -1,0 +1,4 @@
+seed_id,seed_name,asset_group,is_active
+1,Sample Equity,Equity,true
+2,Sample Bond,Bond,true
+3,Sample Commodity,Commodity,false

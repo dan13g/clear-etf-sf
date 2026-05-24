@@ -14,8 +14,8 @@ select
         when 'l&g' then 'L&G'
         else nullif(trim(cast(raw.provider as varchar)), '')
     end as provider_name,
-    nullif(trim(cast(raw."index" as varchar)), '') as index_code,
-    replace(nullif(trim(cast(raw."index" as varchar)), ''), '_', ' ') as index_name,
+    nullif(trim(cast(raw."INDEX" as varchar)), '') as index_code,
+    replace(nullif(trim(cast(raw."INDEX" as varchar)), ''), '_', ' ') as index_name,
     lower(nullif(trim(cast(raw.equivalence_group_code as varchar)), '')) as equivalence_group_code,
     lower(nullif(trim(cast(raw.relationship_to_group as varchar)), '')) as relationship_to_group,
     nullif(trim(cast(raw.asset_class as varchar)), '') as asset_class,

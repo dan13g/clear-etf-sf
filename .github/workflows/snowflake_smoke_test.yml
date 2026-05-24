@@ -1,15 +1,13 @@
-name: daily_runner
+name: snowflake_smoke_test
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 22 * * 0"
 
 permissions:
   contents: read
 
 jobs:
-  daily-prices-runner:
+  snowflake-smoke-test:
     runs-on: ubuntu-latest
 
     env:
@@ -46,9 +44,8 @@ jobs:
           SNOWFLAKE_CI_DATABASE: ${{ secrets.SNOWFLAKE_CI_DATABASE }}
           SNOWFLAKE_CI_SCHEMA: ${{ secrets.SNOWFLAKE_CI_SCHEMA }}
           SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-          ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
         run: |
-          for secret_name in SNOWFLAKE_CI_USER SNOWFLAKE_CI_ROLE SNOWFLAKE_CI_WAREHOUSE SNOWFLAKE_CI_DATABASE SNOWFLAKE_CI_SCHEMA SNOWFLAKE_PRIVATE_KEY ETF_METADATA_GOOGLE_SHEET; do
+          for secret_name in SNOWFLAKE_CI_USER SNOWFLAKE_CI_ROLE SNOWFLAKE_CI_WAREHOUSE SNOWFLAKE_CI_DATABASE SNOWFLAKE_CI_SCHEMA SNOWFLAKE_PRIVATE_KEY; do
             if [ -z "${!secret_name}" ]; then
               echo "$secret_name is not configured."
               echo "Add it in GitHub: Settings > Secrets and variables > Actions > New repository secret."
@@ -76,8 +73,6 @@ jobs:
           fi
 
       - name: Smoke test Snowflake Python connection
-        env:
-          ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
         run: python src/test_snowflake_connection.py
 
       - name: Create dbt profiles
@@ -85,22 +80,6 @@ jobs:
         run: |
           mkdir -p "$HOME/.dbt"
           cat > "$HOME/.dbt/profiles.yml" <<'YAML'
-          clear_etf_local:
-            target: dev
-            outputs:
-              dev:
-                type: snowflake
-                account: CPRCYYC-FB19926
-                user: bgheoca
-                password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
-                authenticator: username_password_mfa
-                role: clearetf_role
-                database: clearetf_db
-                schema: RAW
-                warehouse: clearetf_wh
-                threads: 10
-                reuse_connections: True
-
           clear_etf_ci:
             target: ci
             outputs:
@@ -121,24 +100,3 @@ jobs:
       - name: Run dbt debug
         working-directory: dbt
         run: dbt debug --profile clear_etf_ci
-
-      - name: Load asset master
-        env:
-          ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
-        run: python src/load_asset_master.py
-
-      - name: Run daily price loader
-        env:
-          ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
-        run: python src/load_daily_prices.py
-
-      - name: Load ETF metadata from Google Sheets
-        env:
-          ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
-        run: python src/load_etf_metadata.py
-
-      - name: Run dbt
-        working-directory: dbt
-        run: |
-          dbt deps --profile clear_etf_ci
-          dbt run --profile clear_etf_ci

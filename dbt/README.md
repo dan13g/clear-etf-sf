@@ -1,6 +1,11 @@
 # dbt Setup
 
-This dbt project now targets Snowflake.
+This dbt project now supports separate local and CI Snowflake profiles.
+
+## Profile Names
+
+- `clear_etf_local`: local username/password/MFA workflow
+- `clear_etf_ci`: GitHub Actions or other automation using a Snowflake private key
 
 ## Install
 
@@ -17,16 +22,28 @@ Create or update:
 
 Use the example in [profiles.example.yml](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/dbt/profiles.example.yml).
 
-You can keep your existing `aw_dw_dbt` profile and add `clear_etf` alongside it as a separate top-level profile.
-
-## Run
+## Local Run
 
 From [dbt](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/dbt):
 
 ```bash
-.\dbt.cmd debug --profile clear_etf
-.\dbt.cmd deps
-.\dbt.cmd run --profile clear_etf
+.\dbt.cmd debug --profile clear_etf_local
+.\dbt.cmd deps --profile clear_etf_local
+.\dbt.cmd run --profile clear_etf_local
+```
+
+## CI Run
+
+GitHub Actions uses `clear_etf_ci` with:
+
+- `private_key_path`
+- optional `private_key_passphrase`
+- secret-driven `user`, `role`, `warehouse`, `database`, and `schema`
+
+The CI smoke test runs:
+
+```bash
+dbt debug --profile clear_etf_ci
 ```
 
 ## Notes

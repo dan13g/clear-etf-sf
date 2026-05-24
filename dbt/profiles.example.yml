@@ -1,9 +1,9 @@
-clear_etf:
+clear_etf_local:
   target: dev
   outputs:
     dev:
       type: snowflake
-      account: FB19926.eu-west-2.aws
+      account: CPRCYYC-FB19926
       user: bgheoca
       password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
       authenticator: username_password_mfa
@@ -11,5 +11,21 @@ clear_etf:
       database: clearetf_db
       schema: RAW
       warehouse: clearetf_wh
+      threads: 10
+      reuse_connections: True
+
+clear_etf_ci:
+  target: ci
+  outputs:
+    ci:
+      type: snowflake
+      account: CPRCYYC-FB19926
+      user: "{{ env_var('SNOWFLAKE_CI_USER', 'bgheoca') }}"
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
+      role: "{{ env_var('SNOWFLAKE_CI_ROLE', 'clearetf_role') }}"
+      database: "{{ env_var('SNOWFLAKE_CI_DATABASE', 'clearetf_db') }}"
+      schema: "{{ env_var('SNOWFLAKE_CI_SCHEMA', 'RAW') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_CI_WAREHOUSE', 'clearetf_wh') }}"
       threads: 10
       reuse_connections: True

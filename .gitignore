@@ -1,5 +1,7 @@
 .venv/
+.venv-snowflake/
 venv/
+.certs/
 
 .env
 .streamlit/secrets.toml
