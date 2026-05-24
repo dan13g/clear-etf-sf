@@ -15,8 +15,25 @@ models:
       - name: asset_type
         tests:
           - not_null
+          - accepted_values:
+              values: ['ETF', 'Stock', 'Index', 'FX', 'Commodity', 'Bond Proxy']
+      - name: is_active
+        tests:
+          - not_null
   - name: stg_asset_prices
     description: Cleaned daily yfinance market prices joined to the asset master.
+    tests:
+      - expect_compound_columns_to_be_unique:
+          column_list: ['asset_key', 'full_date']
+      - expect_row_values_to_satisfy:
+          expression: "high_price >= low_price"
+          row_condition: "high_price is not null and low_price is not null"
+      - expect_row_values_to_satisfy:
+          expression: "high_price >= open_price and low_price <= open_price"
+          row_condition: "open_price is not null and high_price is not null and low_price is not null"
+      - expect_row_values_to_satisfy:
+          expression: "high_price >= close_price and low_price <= close_price"
+          row_condition: "close_price is not null and high_price is not null and low_price is not null"
     columns:
       - name: date_key
         tests:
@@ -27,11 +44,57 @@ models:
       - name: full_date
         tests:
           - not_null
+          - expect_column_max_to_be_recent:
+              max_age_days: 7
+              config:
+                severity: warn
+      - name: open_price
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+              row_condition: "open_price is not null"
+      - name: high_price
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+              row_condition: "high_price is not null"
+      - name: low_price
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+              row_condition: "low_price is not null"
       - name: close_price
         tests:
           - not_null
+          - expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+      - name: adj_close_price
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+              row_condition: "adj_close_price is not null"
+      - name: price_for_returns
+        tests:
+          - not_null
+          - expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+      - name: volume
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              row_condition: "volume is not null"
   - name: stg_etf_metadata
     description: Cleaned ETF-specific metadata mapped onto the shared asset dimension.
+    tests:
+      - expect_row_values_to_satisfy:
+          expression: "inception_date <= current_date"
+          row_condition: "inception_date is not null"
     columns:
       - name: asset_key
         tests:
@@ -46,8 +109,29 @@ models:
           - relationships:
               to: ref('stg_equivalence_group')
               field: equivalence_group_code
+      - name: ter
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 5
+              row_condition: "ter is not null"
+              config:
+                severity: warn
+      - name: is_active
+        tests:
+          - not_null:
+              config:
+                severity: warn
   - name: stg_etf_geography
     description: Standardized ETF geography exposure rows at ETF by geography grain.
+    tests:
+      - expect_compound_columns_to_be_unique:
+          column_list: ['asset_key', 'geography_name']
+      - expect_grouped_weights_to_balance:
+          group_by: asset_key
+          weight_column: exposure_weight
+          config:
+            severity: warn
     columns:
       - name: asset_key
         tests:
@@ -58,8 +142,19 @@ models:
       - name: exposure_weight
         tests:
           - not_null
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
   - name: stg_etf_sector
     description: Standardized ETF sector exposure rows at ETF by sector grain.
+    tests:
+      - expect_compound_columns_to_be_unique:
+          column_list: ['asset_key', 'sector_name']
+      - expect_grouped_weights_to_balance:
+          group_by: asset_key
+          weight_column: exposure_weight
+          config:
+            severity: warn
     columns:
       - name: asset_key
         tests:
@@ -70,6 +165,9 @@ models:
       - name: exposure_weight
         tests:
           - not_null
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
   - name: stg_equivalence_group
     description: Cleaned equivalence group master data.
     columns:
@@ -79,6 +177,9 @@ models:
           - unique
   - name: stg_equivalence_group_relationships
     description: Cleaned equivalence group relationship mapping for ETF comparison logic.
+    tests:
+      - expect_compound_columns_to_be_unique:
+          column_list: ['source_group_code', 'target_group_code']
     columns:
       - name: source_group_code
         tests:

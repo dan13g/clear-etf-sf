@@ -97,7 +97,16 @@ Then run dbt from [dbt](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/d
 .\dbt.cmd debug --profile clear_etf_local
 .\dbt.cmd deps --profile clear_etf_local
 .\dbt.cmd run --profile clear_etf_local
+.\dbt.cmd test --profile clear_etf_local
 ```
+
+The dbt test suite includes baseline integrity checks plus business-oriented expectations for common data quality issues such as:
+
+- duplicate asset-date records
+- invalid asset types and regime labels
+- negative or out-of-range prices, TERs, and overlap scores
+- stale price data warnings
+- ETF geography and sector weights that do not add up to roughly 100%
 
 ## GitHub Actions
 

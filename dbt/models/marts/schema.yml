@@ -33,6 +33,9 @@ models:
     description: ETF sector exposure bridge.
   - name: fact_asset_price_daily
     description: Universal price fact at asset by trading date grain.
+    tests:
+      - expect_compound_columns_to_be_unique:
+          column_list: ['date_key', 'asset_key']
     columns:
       - name: date_key
         tests:
@@ -42,21 +45,69 @@ models:
           - not_null
   - name: fact_etf_daily
     description: ETF-only compatibility fact built from the asset-wide metrics layer.
+    tests:
+      - expect_compound_columns_to_be_unique:
+          column_list: ['date_key', 'etf_key']
   - name: mart_asset_returns
     description: Asset-wide return mart.
   - name: mart_asset_risk
     description: Asset-wide risk mart.
   - name: mart_asset_trend
     description: Asset-wide trend mart.
+    columns:
+      - name: trend_score
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 2
+      - name: trend_label
+        tests:
+          - accepted_values:
+              values: ['Uptrend', 'Downtrend', 'Mixed']
   - name: mart_asset_moves
     description: Daily top-mover mart across the tracked universe.
+    columns:
+      - name: move_direction
+        tests:
+          - accepted_values:
+              values: ['Up', 'Down', 'Flat']
   - name: mart_fx_intelligence
     description: FX-focused intelligence mart.
   - name: mart_market_regime
     description: Daily regime classification mart based on cross-market signals.
+    columns:
+      - name: regime_label
+        tests:
+          - accepted_values:
+              values: ['Risk On', 'Defensive', 'Inflationary', 'Mixed']
   - name: mart_etf_overlap
     description: ETF overlap mart using geography and sector exposures.
+    columns:
+      - name: sector_overlap_score
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              row_condition: "sector_overlap_score is not null"
+      - name: geography_overlap_score
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              row_condition: "geography_overlap_score is not null"
+      - name: blended_overlap_score
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
   - name: mart_etf_equivalence
     description: ETF equivalence mart comparing products within the same equivalence group.
   - name: mart_fee_benchmarks
     description: ETF TER benchmarking mart by equivalence group.
+    columns:
+      - name: ter_percentile
+        tests:
+          - expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1
+              row_condition: "ter_percentile is not null"
