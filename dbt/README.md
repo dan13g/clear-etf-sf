@@ -1,84 +1,36 @@
-# ClearETF
+# dbt Setup
 
-## Install (local)
-pip install "dbt-core>=1.8" "dbt-duckdb>=1.5.2" "duckdb==1.5.1"
+This dbt project now targets Snowflake.
 
-## profiles.yml (MotherDuck)
-Create at:
-- Windows: %USERPROFILE%\.dbt\profiles.yml
-- Mac/Linux: ~/.dbt/profiles.yml
+## Install
 
-Example:
-
-```yaml
-dbt:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: "md:clear_etf"
-      token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
-      threads: 4
+```bash
+pip install "dbt-core==1.8.0" "dbt-snowflake==1.8.0"
 ```
 
-## Env vars
-- MOTHERDUCK_TOKEN
+## profiles.yml
+
+Create or update:
+
+- Windows: `%USERPROFILE%\\.dbt\\profiles.yml`
+- Mac/Linux: `~/.dbt/profiles.yml`
+
+Use the example in [profiles.example.yml](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/dbt/profiles.example.yml).
+
+You can keep your existing `aw_dw_dbt` profile and add `clear_etf` alongside it as a separate top-level profile.
 
 ## Run
-From this folder:
+
+From [dbt](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/dbt):
 
 ```bash
-.\dbt.cmd debug
-.\dbt.cmd run --select raw
-.\dbt.cmd run --select staging
+.\dbt.cmd debug --profile clear_etf
+.\dbt.cmd deps
+.\dbt.cmd run --profile clear_etf
 ```
-
-If you prefer the raw executable, use `..\venv\Scripts\dbt.exe`.
-Plain `dbt` may still resolve to the dbt Cloud CLI unless your repo virtualenv is activated first.
 
 ## Notes
-- Raw models 
 
-## Streamlit App
-From the repo root:
-
-```bash
-pip install -r requirements.txt
-streamlit run app/Home.py
-```
-
-For local secrets, create `.streamlit/secrets.toml` from `.streamlit/secrets.toml.example` or use a repo-root `.env`.
-
-Minimum local config:
-
-```toml
-MOTHERDUCK_TOKEN = "your-motherduck-token"
-MOTHERDUCK_DATABASE = "md:clear_etf"
-APP_PASSWORD = "choose-a-shared-password"
-```
-
-The app now requires a single shared password for every user. Store it in `.streamlit/secrets.toml` for local development or set `APP_PASSWORD` as an environment variable.
-
-For Streamlit Community Cloud, set:
-- Main file path: `app/Home.py`
-- App dependency file: `app/requirements.txt` (pins `duckdb==1.5.1` for MotherDuck compatibility)
-- Secret `MOTHERDUCK_TOKEN`
-- Optional secret `MOTHERDUCK_DATABASE=md:clear_etf`
-- Secret `APP_PASSWORD`
-
-## Deployment Checklist
-1. Push the repo to GitHub.
-2. In Streamlit Community Cloud, create a new app from the repo.
-3. Set the main file path to `app/Home.py`.
-4. If prompted for dependencies, point Streamlit at `app/requirements.txt`.
-5. In the app settings, add these secrets:
-
-```toml
-MOTHERDUCK_TOKEN = "your-motherduck-token"
-MOTHERDUCK_DATABASE = "md:clear_etf"
-APP_PASSWORD = "choose-a-shared-password"
-```
-
-6. Deploy the app and confirm you see the password screen before the ETF search form.
-
-This is a lightweight shared-password gate, which is useful for small private apps but is not a substitute for full user authentication.
+- The raw source name is `snowflake_raw`.
+- Raw source tables are expected in `clearetf_db.RAW`.
+- The date spine model was rewritten for Snowflake recursion instead of DuckDB `generate_series`.

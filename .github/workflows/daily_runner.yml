@@ -3,7 +3,6 @@ name: daily_runner
 on:
   workflow_dispatch:
   schedule:
-    # Run at 22:00 UTC/GMT every Sunday.
     - cron: "0 22 * * 0"
 
 permissions:
@@ -12,6 +11,15 @@ permissions:
 jobs:
   daily-prices-runner:
     runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_ACCOUNT: FB19926.eu-west-2.aws
+      SNOWFLAKE_USER: bgheoca
+      SNOWFLAKE_ROLE: clearetf_role
+      SNOWFLAKE_WAREHOUSE: clearetf_wh
+      SNOWFLAKE_DATABASE: clearetf_db
+      SNOWFLAKE_SCHEMA: RAW
+      SNOWFLAKE_AUTHENTICATOR: username_password_mfa
 
     steps:
       - name: Check out repository
@@ -29,11 +37,11 @@ jobs:
       - name: Validate required secrets
         shell: bash
         env:
-          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
           ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
         run: |
-          if [ -z "$MOTHERDUCK_TOKEN" ]; then
-            echo "MOTHERDUCK_TOKEN is not configured."
+          if [ -z "$SNOWFLAKE_PASSWORD" ]; then
+            echo "SNOWFLAKE_PASSWORD is not configured."
             echo "Add it in GitHub: Settings > Secrets and variables > Actions > New repository secret."
             exit 1
           fi
@@ -45,24 +53,24 @@ jobs:
 
       - name: Load asset master
         env:
-          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
         run: python src/load_asset_master.py
 
       - name: Run daily price loader
         env:
-          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
         run: python src/load_daily_prices.py
 
       - name: Load ETF metadata from Google Sheets
         env:
-          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
           ETF_METADATA_GOOGLE_SHEET: ${{ secrets.ETF_METADATA_GOOGLE_SHEET }}
         run: python src/load_etf_metadata.py
 
       - name: Create dbt profile
         shell: bash
         env:
-          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
         run: |
           mkdir -p "$HOME/.dbt"
           cat > "$HOME/.dbt/profiles.yml" <<'YAML'
@@ -70,18 +78,23 @@ jobs:
             target: dev
             outputs:
               dev:
-                type: duckdb
-                path: "md:clear_etf"
-                token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
-                threads: 4
+                type: snowflake
+                account: FB19926.eu-west-2.aws
+                user: bgheoca
+                password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+                authenticator: username_password_mfa
+                role: clearetf_role
+                database: clearetf_db
+                schema: RAW
+                warehouse: clearetf_wh
+                threads: 10
+                reuse_connections: True
           YAML
-          echo "Generated profiles.yml:"
-          cat "$HOME/.dbt/profiles.yml"
 
       - name: Run dbt
         working-directory: dbt
         env:
-          MOTHERDUCK_TOKEN: ${{ secrets.MOTHERDUCK_TOKEN }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
         run: |
           dbt debug --profile clear_etf
           dbt deps

@@ -17,7 +17,7 @@ with daily_signals as (
     group by 1
 )
 select
-    cast(strftime(full_date, '%Y%m%d') as bigint) as date_key,
+    to_number(to_char(full_date, 'YYYYMMDD')) as date_key,
     full_date,
     sp500_return_1m,
     global_bond_return_1m,

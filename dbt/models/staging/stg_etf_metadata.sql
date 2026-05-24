@@ -42,7 +42,7 @@ select
         else null
     end as is_active,
     nullif(trim(cast(raw.notes as varchar)), '') as notes
-from {{ source('motherduck_raw', 'etf_metadata') }} as raw
+from {{ source('snowflake_raw', 'etf_metadata') }} as raw
 inner join {{ ref('stg_asset_master') }} as asset
     on upper(cast(raw.ticker as varchar)) = asset.ticker
 where nullif(trim(cast(raw.etf as varchar)), '') is not null

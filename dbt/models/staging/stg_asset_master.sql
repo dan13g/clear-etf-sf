@@ -18,6 +18,6 @@ select
     nullif(trim(cast(provider_name as varchar)), '') as provider_name,
     nullif(trim(cast(exchange as varchar)), '') as exchange,
     coalesce(cast(is_active as boolean), true) as is_active
-from {{ source('motherduck_raw', 'asset_master') }}
+from {{ source('snowflake_raw', 'asset_master') }}
 where nullif(trim(cast(ticker as varchar)), '') is not null
   and coalesce(cast(is_active as boolean), true)

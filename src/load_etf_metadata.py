@@ -9,13 +9,12 @@ from urllib.request import urlopen
 import pandas as pd
 
 from ingestion_utils import (
-    DEFAULT_DB_PATH,
+    DEFAULT_DATABASE,
     DEFAULT_SCHEMA,
-    connect_md,
-    ensure_schema,
+    connect_snowflake,
     make_unique_identifiers,
-    normalize_dataframe_for_duckdb,
-    quote_identifier,
+    normalize_dataframe_for_snowflake,
+    replace_table,
 )
 
 GOOGLE_SHEET_ENV_VAR = "ETF_METADATA_GOOGLE_SHEET"
@@ -31,7 +30,7 @@ SHEET_TABLE_MAP = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Load curated ETF metadata from Google Sheets into MotherDuck."
+        description="Load curated ETF metadata from Google Sheets into Snowflake."
     )
     parser.add_argument(
         "--google-sheet",
@@ -43,13 +42,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--database",
-        default=os.getenv("MOTHERDUCK_DATABASE", DEFAULT_DB_PATH),
-        help="MotherDuck database path, for example md:clear_etf.",
+        default=os.getenv("SNOWFLAKE_DATABASE", DEFAULT_DATABASE),
+        help="Target Snowflake database.",
     )
     parser.add_argument(
         "--schema",
-        default=os.getenv("MOTHERDUCK_SCHEMA", DEFAULT_SCHEMA),
-        help="Target schema in MotherDuck.",
+        default=os.getenv("SNOWFLAKE_SCHEMA", DEFAULT_SCHEMA),
+        help="Target schema in Snowflake.",
     )
     return parser.parse_args()
 
@@ -131,64 +130,64 @@ def load_sheet(
     connection,
     workbook_source: bytes,
     schema_name: str,
+    database_name: str,
     sheet_name: str,
     table_name: str,
 ) -> tuple[str, int]:
     dataframe = read_sheet(workbook_source, sheet_name)
     dataframe = dataframe.dropna(axis=0, how="all").dropna(axis=1, how="all")
     dataframe.columns = make_unique_identifiers(dataframe.columns)
-    dataframe = normalize_dataframe_for_duckdb(dataframe)
+    dataframe = normalize_dataframe_for_snowflake(dataframe)
 
-    temp_name = f"temp_{table_name}"
-    connection.register(temp_name, dataframe)
-    connection.execute(
-        f"""
-        CREATE OR REPLACE TABLE {quote_identifier(schema_name)}.{quote_identifier(table_name)} AS
-        SELECT * FROM {quote_identifier(temp_name)}
-        """
+    _, loaded_table_name, row_count = replace_table(
+        connection,
+        dataframe,
+        schema_name,
+        table_name,
+        database_name,
     )
-    connection.unregister(temp_name)
-
-    row_count = connection.execute(
-        f"SELECT COUNT(*) FROM {quote_identifier(schema_name)}.{quote_identifier(table_name)}"
-    ).fetchone()[0]
-    return table_name, row_count
+    return loaded_table_name, row_count
 
 
 def main() -> None:
     args = parse_args()
     workbook_source, workbook_description = resolve_workbook_source(args)
 
-    print(f"Connecting to MotherDuck database {args.database}...")
-    connection = connect_md(args.database)
-    schema_name = ensure_schema(connection, args.schema)
+    print(f"Connecting to Snowflake database {args.database}...")
+    connection = connect_snowflake(args.database, args.schema)
+    schema_name = args.schema
 
-    workbook_sheets = set(read_excel_file(workbook_source).sheet_names)
-    missing_sheets = [sheet for sheet in SHEET_TABLE_MAP if sheet not in workbook_sheets]
-    if missing_sheets:
-        raise ValueError(
-            f"Workbook is missing required ETF metadata sheets: {', '.join(missing_sheets)}"
-        )
+    try:
+        workbook_sheets = set(read_excel_file(workbook_source).sheet_names)
+        missing_sheets = [sheet for sheet in SHEET_TABLE_MAP if sheet not in workbook_sheets]
+        if missing_sheets:
+            raise ValueError(
+                f"Workbook is missing required ETF metadata sheets: {', '.join(missing_sheets)}"
+            )
 
-    print(f"Loading ETF metadata from {workbook_description}")
+        print(f"Loading ETF metadata from {workbook_description}")
 
-    loaded_tables: list[tuple[str, int]] = []
-    for sheet_name, table_name in SHEET_TABLE_MAP.items():
-        loaded_table, row_count = load_sheet(
-            connection,
-            workbook_source,
-            schema_name,
-            sheet_name,
-            table_name,
-        )
-        loaded_tables.append((loaded_table, row_count))
-        print(f"Loaded sheet '{sheet_name}' into {schema_name}.{loaded_table} ({row_count} rows)")
+        loaded_tables: list[tuple[str, int]] = []
+        for sheet_name, table_name in SHEET_TABLE_MAP.items():
+            loaded_table, row_count = load_sheet(
+                connection,
+                workbook_source,
+                schema_name,
+                args.database,
+                sheet_name,
+                table_name,
+            )
+            loaded_tables.append((loaded_table, row_count))
+            print(
+                f"Loaded sheet '{sheet_name}' into {schema_name}.{loaded_table} ({row_count} rows)"
+            )
 
-    print("\nSummary:")
-    for table_name, row_count in loaded_tables:
-        print(f"- {schema_name}.{table_name}: {row_count} rows")
+        print("\nSummary:")
+        for table_name, row_count in loaded_tables:
+            print(f"- {schema_name}.{table_name}: {row_count} rows")
+    finally:
+        connection.close()
 
-    connection.close()
     print("\nETF metadata load complete.")
 
 

@@ -1,117 +1,61 @@
-# ClearETF
+# ClearETF Snowflake
 
-ClearETF is a small ETF research stack built on Python, MotherDuck, dbt, and Streamlit.
-It combines curated ETF metadata with daily market prices, models that data into analytics-friendly tables, and serves a lightweight web app for exploring ETF details, exposures, and price history.
+This repo is a Snowflake version of the ClearETF example stack. It keeps the Python ingestion scripts and dbt models, but removes the Streamlit app layer.
 
-## What This Repo Does
+The pipeline now does two jobs:
 
-The repo does three main jobs:
+1. Loads raw ETF source data into Snowflake.
+2. Builds staging, dimensions, marts, exports, and reports with dbt.
 
-1. Loads source data into MotherDuck.
-2. Transforms that raw data into reporting tables with dbt.
-3. Exposes the modeled data through a Streamlit app.
+## Target Snowflake Account
 
-The current app focuses on ETF lookup and review. You can search an ETF, inspect metadata, review geography and sector exposure, and view its historical price chart.
+This repo is configured around these defaults:
 
-## Data Flow
+- Account: `FB19926.eu-west-2.aws`
+- User: `bgheoca`
+- Role: `clearetf_role`
+- Warehouse: `clearetf_wh`
+- Database: `clearetf_db`
+- Schema: `RAW`
+- Authenticator: `username_password_mfa`
 
-The pipeline works like this:
-
-1. `data/asset_master.csv` defines the tracked instrument universe.
-2. `src/load_daily_prices.py` downloads historical prices for active tickers from `yfinance`.
-3. Curated ETF metadata and exposure mappings come from a Google Sheet.
-4. The Python loaders write these datasets into the `raw` schema in MotherDuck.
-5. dbt builds staging, dimensions, intermediate models, marts, exports, and reports on top of the raw tables.
-6. `app/Home.py` queries the modeled tables in MotherDuck and renders the Streamlit UI.
-
-## Main Components
-
-### Ingestion
-
-The ingestion scripts live in `src/`:
-
-- `src/load_asset_master.py`
-  Loads `data/asset_master.csv` into `raw.asset_master`.
-- `src/load_daily_prices.py`
-  Pulls daily OHLCV history from `yfinance` for active tickers and loads `raw.asset_prices_yfinance`.
-- `src/load_etf_metadata.py`
-  Loads ETF metadata tabs from a configured Google Sheet into:
-  `raw.etf_metadata`, `raw.etf_geography`, `raw.etf_sector`, `raw.equivalence_groups`, and `raw.equivalence_group_relationships`.
-- `src/ingestion_utils.py`
-  Shared MotherDuck connection, schema creation, identifier cleanup, and dataframe normalization helpers.
-
-### Modeling
-
-The dbt project lives in `dbt/` and materializes tables into these schemas:
-
-- `stg`
-- `dimensions`
-- `int`
-- `marts`
-- `exports`
-- `reports`
-
-The Streamlit app mainly reads from the `marts` schema plus staged asset prices for the chart.
-
-### App
-
-The Streamlit app lives in `app/`:
-
-- `app/Home.py`
-  Main ETF search and analysis page.
-- `app/motherduck_utils.py`
-  Reads settings from environment variables, `.env`, or `.streamlit/secrets.toml`, then connects to MotherDuck.
-- `app/app_auth.py`
-  Adds a simple shared-password gate using `APP_PASSWORD`.
+Only the password is intentionally left out of the repo. Set it with `SNOWFLAKE_PASSWORD`.
 
 ## Repo Layout
 
 ```text
 .
 |-- .github/workflows/       GitHub Actions automation
-|-- app/                     Streamlit app
-|-- data/                    Curated CSV/XLSX inputs
-|-- dbt/                     dbt project and models
+|-- data/                    Curated CSV inputs
+|-- dbt/                     dbt project and Snowflake profile example
 |-- src/                     Python ingestion scripts
 |-- requirements.txt         Root Python dependencies
 ```
 
-## Requirements
+## Environment Variables
 
-- Python 3.11 recommended
-- A MotherDuck token
-- Access to the local source files in `data/`
+Required:
 
-Environment variables used by the project:
+- `SNOWFLAKE_PASSWORD`
+- `ETF_METADATA_GOOGLE_SHEET`
 
-- `MOTHERDUCK_TOKEN`
-- `MOTHERDUCK_DATABASE` optional, defaults to `md:clear_etf`
-- `MOTHERDUCK_SCHEMA` optional for loaders, defaults to `raw`
-- `ETF_METADATA_GOOGLE_SHEET` required for `src/load_etf_metadata.py`; use the full Google Sheets share URL when possible
-- `APP_PASSWORD` required for the Streamlit app
+Optional overrides:
 
-## Local Setup
+- `SNOWFLAKE_ACCOUNT`
+- `SNOWFLAKE_USER`
+- `SNOWFLAKE_ROLE`
+- `SNOWFLAKE_WAREHOUSE`
+- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_SCHEMA`
+- `SNOWFLAKE_AUTHENTICATOR`
 
-Install dependencies from the repo root:
+## Install
 
 ```bash
 pip install -r requirements.txt
 ```
 
-If you want to run the Streamlit app locally, create either:
-
-- `.streamlit/secrets.toml`
-- or a repo-root `.env`
-
-Minimum local configuration:
-
-```toml
-MOTHERDUCK_TOKEN = "your-motherduck-token"
-MOTHERDUCK_DATABASE = "md:clear_etf"
-APP_PASSWORD = "choose-a-shared-password"
-```
-
-## Running The Ingestion Scripts
+## Python Loads
 
 From the repo root:
 
@@ -121,92 +65,33 @@ python src/load_daily_prices.py
 python src/load_etf_metadata.py
 ```
 
-These scripts expect `MOTHERDUCK_TOKEN` to be available in the environment.
+`src/load_etf_metadata.py` reads ETF metadata from Google Sheets only. Set `ETF_METADATA_GOOGLE_SHEET` to the full share URL when Google includes a `resourcekey`.
 
-`src/load_etf_metadata.py` reads ETF metadata only from Google Sheets. Set
-`ETF_METADATA_GOOGLE_SHEET` to the full share URL for the sheet:
+## dbt Profile
 
-```powershell
-$env:ETF_METADATA_GOOGLE_SHEET = "https://docs.google.com/spreadsheets/d/your-sheet-id/edit?gid=0&resourcekey=your-resource-key#gid=0"
-python src/load_etf_metadata.py
-```
+Add a `clear_etf` profile block to `%USERPROFILE%\\.dbt\\profiles.yml` on Windows or `~/.dbt/profiles.yml` on Mac/Linux.
 
-You can also pass it explicitly on the command line:
+An example is included at [dbt/profiles.example.yml](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/dbt/profiles.example.yml).
 
-```powershell
-python src/load_etf_metadata.py --google-sheet "https://docs.google.com/spreadsheets/d/your-sheet-id/edit?gid=0&resourcekey=your-resource-key#gid=0"
-```
-
-The loader downloads the Google Sheet as XLSX and reads the required tabs from that export. If
-your Google share link includes a `resourcekey`, use the full URL rather than only the sheet ID.
-
-## Running dbt
-
-Create a dbt profile at `~/.dbt/profiles.yml` on Mac/Linux or `%USERPROFILE%\.dbt\profiles.yml` on Windows.
-
-Example profile:
-
-```yaml
-clear_etf:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: "md:clear_etf"
-      token: "{{ env_var('MOTHERDUCK_TOKEN') }}"
-      threads: 4
-```
-
-Then run dbt from the `dbt/` directory:
+Then run dbt from [dbt](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/dbt):
 
 ```bash
-.\dbt.cmd debug
+.\dbt.cmd debug --profile clear_etf
 .\dbt.cmd deps
 .\dbt.cmd run --profile clear_etf
 ```
 
-If your environment resolves `dbt` differently, you can also use the virtualenv executable directly.
+## GitHub Actions
 
-## Running The App
+The workflow in [.github/workflows/daily_runner.yml](/c:/Users/dan13/OneDrive/Documents/GitHub/clear-etf-sf/.github/workflows/daily_runner.yml) now targets Snowflake instead of MotherDuck.
 
-From the repo root:
+Repository secrets needed:
 
-```bash
-streamlit run app/Home.py
-```
-
-The app shows:
-
-- ETF metadata
-- geography exposure
-- sector exposure
-- historical adjusted-close price chart
-
-The app uses a shared password gate. This is useful for a lightweight private app, but it is not full user-level authentication
-
-## Automation
-
-GitHub Actions runs the ingestion and dbt pipeline with `.github/workflows/daily_runner.yml`.
-
-That workflow currently:
-
-- supports manual runs with `workflow_dispatch`
-- runs automatically every Sunday at `22:00 UTC`
-- installs Python dependencies
-- validates `MOTHERDUCK_TOKEN`
-- loads raw data
-- creates a dbt profile
-- runs `dbt debug`, `dbt deps`, and `dbt run`
-
-For GitHub Actions, configure this repository secret:
-
-- `MOTHERDUCK_TOKEN`
-- `ETF_METADATA_GOOGLE_SHEET` required, so Actions can load ETF metadata from Google Sheets
+- `SNOWFLAKE_PASSWORD`
+- `ETF_METADATA_GOOGLE_SHEET`
 
 ## Notes
 
-- `src/load_etf_metadata.py` requires `ETF_METADATA_GOOGLE_SHEET` or `--google-sheet`; it no longer reads ETF metadata from a local XLSX fallback.
-- If you use Google Sheets for local runs or GitHub Actions, the sheet must be accessible to the runtime without interactive login. In practice, that usually means `Anyone with the link` plus `Viewer`, and using the full share URL if Google includes a `resourcekey`.
-- `data/asset_master.csv` controls which tickers are loaded from `yfinance`.
-- The app assumes the dbt models have already been built in MotherDuck.
-- There is a more dbt-specific guide in `dbt/README.md`.
+- Raw tables are loaded into `clearetf_db.RAW`.
+- dbt sources now read from the Snowflake `RAW` schema.
+- The old Streamlit app is not part of this Snowflake version.

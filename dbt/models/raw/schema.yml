@@ -1,9 +1,9 @@
 version: 2
 
 sources:
-  - name: motherduck_raw
-    description: Raw tables loaded into MotherDuck by the Python ingestion scripts.
-    schema: raw
+  - name: snowflake_raw
+    description: Raw tables loaded into Snowflake by the Python ingestion scripts.
+    schema: RAW
     tables:
       - name: asset_master
         description: Tracked asset master config loaded from the curated CSV file.

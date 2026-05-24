@@ -1,5 +1,5 @@
 select
-    cast(strftime(cast(raw.date as date), '%Y%m%d') as bigint) as date_key,
+    to_number(to_char(cast(raw.date as date), 'YYYYMMDD')) as date_key,
     cast(raw.date as date) as full_date,
     asset.asset_key,
     asset.ticker,
@@ -17,7 +17,7 @@ select
     cast(raw.adj_close as double) as adj_close_price,
     coalesce(cast(raw.adj_close as double), cast(raw.close as double)) as price_for_returns,
     cast(raw.volume as double) as volume
-from {{ source('motherduck_raw', 'asset_prices_yfinance') }} as raw
+from {{ source('snowflake_raw', 'asset_prices_yfinance') }} as raw
 inner join {{ ref('stg_asset_master') }} as asset
     on upper(cast(raw.ticker as varchar)) = asset.ticker
 where cast(raw.date as date) is not null

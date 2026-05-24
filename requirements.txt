@@ -4,7 +4,6 @@ openpyxl
 openai
 python-dotenv
 certifi
-streamlit
 dbt-core==1.8.0
-dbt-duckdb==1.8.1
-duckdb==1.5.1
+dbt-snowflake==1.8.0
+snowflake-connector-python[pandas]

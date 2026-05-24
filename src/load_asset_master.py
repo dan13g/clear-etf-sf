@@ -5,12 +5,11 @@ from pathlib import Path
 import pandas as pd
 
 from ingestion_utils import (
-    DEFAULT_DB_PATH,
+    DEFAULT_DATABASE,
     DEFAULT_SCHEMA,
-    connect_md,
-    ensure_schema,
-    normalize_dataframe_for_duckdb,
-    quote_identifier,
+    connect_snowflake,
+    normalize_dataframe_for_snowflake,
+    replace_table,
 )
 
 DEFAULT_ASSET_MASTER = Path(__file__).resolve().parents[1] / "data" / "asset_master.csv"
@@ -33,7 +32,7 @@ FALSE_VALUES = {"false", "0", "no", "n", "f"}
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Load the tracked asset master file into MotherDuck."
+        description="Load the tracked asset master file into Snowflake."
     )
     parser.add_argument(
         "--asset-master",
@@ -42,13 +41,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--database",
-        default=os.getenv("MOTHERDUCK_DATABASE", DEFAULT_DB_PATH),
-        help="MotherDuck database path, for example md:clear_etf.",
+        default=os.getenv("SNOWFLAKE_DATABASE", DEFAULT_DATABASE),
+        help="Target Snowflake database.",
     )
     parser.add_argument(
         "--schema",
-        default=os.getenv("MOTHERDUCK_SCHEMA", DEFAULT_SCHEMA),
-        help="Target schema in MotherDuck.",
+        default=os.getenv("SNOWFLAKE_SCHEMA", DEFAULT_SCHEMA),
+        help="Target schema in Snowflake.",
     )
     return parser.parse_args()
 
@@ -74,7 +73,7 @@ def load_asset_master_file(asset_master_path: Path) -> pd.DataFrame:
         column for column in dataframe.columns if column not in REQUIRED_COLUMNS
     ]
     dataframe = dataframe[ordered_columns]
-    return normalize_dataframe_for_duckdb(dataframe)
+    return normalize_dataframe_for_snowflake(dataframe)
 
 
 def parse_boolean(value):
@@ -104,25 +103,21 @@ def main() -> None:
 
     dataframe = load_asset_master_file(asset_master_path)
 
-    print(f"Connecting to MotherDuck database {args.database}...")
-    connection = connect_md(args.database)
-    schema_name = ensure_schema(connection, args.schema)
+    print(f"Connecting to Snowflake database {args.database}...")
+    connection = connect_snowflake(args.database, args.schema)
 
-    connection.register("temp_asset_master", dataframe)
-    connection.execute(
-        f"""
-        CREATE OR REPLACE TABLE {quote_identifier(schema_name)}.{quote_identifier(TABLE_NAME)} AS
-        SELECT * FROM temp_asset_master
-        """
-    )
-    connection.unregister("temp_asset_master")
+    try:
+        schema_name, table_name, row_count = replace_table(
+            connection,
+            dataframe,
+            args.schema,
+            TABLE_NAME,
+            args.database,
+        )
+    finally:
+        connection.close()
 
-    row_count = connection.execute(
-        f"SELECT COUNT(*) FROM {quote_identifier(schema_name)}.{quote_identifier(TABLE_NAME)}"
-    ).fetchone()[0]
-
-    print(f"Loaded {row_count} rows into {schema_name}.{TABLE_NAME}")
-    connection.close()
+    print(f"Loaded {row_count} rows into {schema_name}.{table_name}")
     print("\nAsset master load complete.")
 
 

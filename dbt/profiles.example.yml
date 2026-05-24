@@ -1,0 +1,15 @@
+clear_etf:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: FB19926.eu-west-2.aws
+      user: bgheoca
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      authenticator: username_password_mfa
+      role: clearetf_role
+      database: clearetf_db
+      schema: RAW
+      warehouse: clearetf_wh
+      threads: 10
+      reuse_connections: True
