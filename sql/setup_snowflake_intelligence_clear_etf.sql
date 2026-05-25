@@ -229,12 +229,12 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
         PRICES.HIGH_PRICE AS HIGH_PRICE COMMENT = 'High price on the trading date',
         PRICES.LOW_PRICE AS LOW_PRICE COMMENT = 'Low price on the trading date',
         PRICES.CLOSE_PRICE AS CLOSE_PRICE COMMENT = 'Closing price on the trading date',
-        PRICES.ADJ_CLOSE_PRICE AS ADJUSTED_CLOSE_PRICE COMMENT = 'Adjusted close price on the trading date',
+        PRICES.ADJUSTED_CLOSE_PRICE AS PRICES.ADJ_CLOSE_PRICE COMMENT = 'Adjusted close price on the trading date',
         PRICES.VOLUME AS VOLUME COMMENT = 'Trading volume on the trading date',
         PRICES.PRICE_RECORD AS 1 COMMENT = 'Count of UCITS ETF daily price records'
     )
     DIMENSIONS (
-        DATES.FULL_DATE AS PRICE_DATE
+        DATES.PRICE_DATE AS DATES.FULL_DATE
             WITH SYNONYMS = ('date', 'trading date', 'price date')
             COMMENT = 'Trading date of the daily price record',
         DATES.DAY_NAME AS DAY_NAME
@@ -273,7 +273,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
         ETFS.ASSET_CLASS AS ASSET_CLASS
             WITH SYNONYMS = ('asset class')
             COMMENT = 'Asset class from ETF metadata',
-        ETFS.CATEGORY AS ETF_CATEGORY
+        ETFS.ETF_CATEGORY AS ETFS.CATEGORY
             WITH SYNONYMS = ('category', 'fund category')
             COMMENT = 'ETF category',
         ETFS.DISTRIBUTION_TYPE AS DISTRIBUTION_TYPE
@@ -282,7 +282,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
         ETFS.REPLICATION_METHOD AS REPLICATION_METHOD
             WITH SYNONYMS = ('replication', 'tracking method')
             COMMENT = 'Replication approach',
-        ETFS.CURRENCY AS FUND_CURRENCY
+        ETFS.FUND_CURRENCY AS ETFS.CURRENCY
             WITH SYNONYMS = ('fund currency', 'quote currency')
             COMMENT = 'Fund currency',
         ETFS.DOMICILE AS DOMICILE
@@ -309,7 +309,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
         INDEXES.INDEX_FAMILY AS INDEX_FAMILY
             WITH SYNONYMS = ('index provider family')
             COMMENT = 'Index family',
-        INDEXES.BROAD_REGION_TYPE AS INDEX_REGION_TYPE
+        INDEXES.INDEX_REGION_TYPE AS INDEXES.BROAD_REGION_TYPE
             WITH SYNONYMS = ('benchmark region', 'index region')
             COMMENT = 'Broad benchmark region classification',
         EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE AS EQUIVALENCE_GROUP_CODE
@@ -355,7 +355,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
     METRICS (
         PRICES.AVERAGE_CLOSE_PRICE AS AVG(PRICES.CLOSE_PRICE)
             COMMENT = 'Average close price',
-        PRICES.AVERAGE_ADJUSTED_CLOSE_PRICE AS AVG(PRICES.ADJUSTED_CLOSE_PRICE)
+        PRICES.AVERAGE_ADJUSTED_CLOSE_PRICE AS AVG(PRICES.ADJ_CLOSE_PRICE)
             COMMENT = 'Average adjusted close price',
         PRICES.HIGHEST_TRADED_PRICE AS MAX(PRICES.HIGH_PRICE)
             COMMENT = 'Highest traded price',
@@ -365,7 +365,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
             COMMENT = 'Total traded volume',
         PRICES.AVERAGE_VOLUME AS AVG(PRICES.VOLUME)
             COMMENT = 'Average traded volume',
-        PRICES.TOTAL_PRICE_RECORDS AS COUNT(PRICES.PRICE_RECORD)
+        PRICES.TOTAL_PRICE_RECORDS AS COUNT(*)
             COMMENT = 'Total count of daily price records'
     )
     COMMENT = 'Semantic view for active UCITS ETF daily price history'
@@ -448,7 +448,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
         ETF_FACTS.ETF_RECORD AS 1 COMMENT = 'Count of UCITS ETF daily analytics records'
     )
     DIMENSIONS (
-        DATES.FULL_DATE AS OBSERVATION_DATE
+        DATES.OBSERVATION_DATE AS DATES.FULL_DATE
             WITH SYNONYMS = ('date', 'observation date', 'trading date')
             COMMENT = 'Trading date of the ETF analytics record',
         DATES.MONTH_NAME AS MONTH_NAME
@@ -475,7 +475,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
         ETFS.ASSET_CLASS AS ASSET_CLASS
             WITH SYNONYMS = ('asset class')
             COMMENT = 'Asset class from ETF metadata',
-        ETFS.CATEGORY AS ETF_CATEGORY
+        ETFS.ETF_CATEGORY AS ETFS.CATEGORY
             WITH SYNONYMS = ('category')
             COMMENT = 'ETF category',
         ETFS.DISTRIBUTION_TYPE AS DISTRIBUTION_TYPE
@@ -484,7 +484,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
         ETFS.REPLICATION_METHOD AS REPLICATION_METHOD
             WITH SYNONYMS = ('replication')
             COMMENT = 'Replication method',
-        ETFS.CURRENCY AS FUND_CURRENCY
+        ETFS.FUND_CURRENCY AS ETFS.CURRENCY
             WITH SYNONYMS = ('fund currency')
             COMMENT = 'Fund currency',
         ETFS.DOMICILE AS DOMICILE
@@ -511,7 +511,7 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
         INDEXES.INDEX_FAMILY AS INDEX_FAMILY
             WITH SYNONYMS = ('index family')
             COMMENT = 'Index family',
-        INDEXES.BROAD_REGION_TYPE AS INDEX_REGION_TYPE
+        INDEXES.INDEX_REGION_TYPE AS INDEXES.BROAD_REGION_TYPE
             WITH SYNONYMS = ('benchmark region')
             COMMENT = 'Broad benchmark region classification',
         INDEXES.DEVELOPED_FLAG AS DEVELOPED_FLAG
@@ -575,11 +575,11 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
             COMMENT = 'Average fifty-two-week drawdown',
         ETF_FACTS.AVG_SHARPE_PROXY AS AVG(ETF_FACTS.SHARPE_PROXY)
             COMMENT = 'Average Sharpe proxy',
-        ETF_FACTS.TOTAL_ETF_RECORDS AS COUNT(ETF_FACTS.ETF_RECORD)
+        ETF_FACTS.TOTAL_ETF_RECORDS AS COUNT(*)
             COMMENT = 'Total count of ETF daily analytics records',
-        ETF_SECTORS.AVG_SECTOR_EXPOSURE_WEIGHT AS AVG(ETF_SECTORS.SECTOR_EXPOSURE_WEIGHT)
+        ETF_SECTORS.AVG_SECTOR_EXPOSURE_WEIGHT AS AVG(ETF_SECTORS.EXPOSURE_WEIGHT)
             COMMENT = 'Average sector exposure weight',
-        ETF_GEOGRAPHIES.AVG_GEOGRAPHY_EXPOSURE_WEIGHT AS AVG(ETF_GEOGRAPHIES.GEOGRAPHY_EXPOSURE_WEIGHT)
+        ETF_GEOGRAPHIES.AVG_GEOGRAPHY_EXPOSURE_WEIGHT AS AVG(ETF_GEOGRAPHIES.EXPOSURE_WEIGHT)
             COMMENT = 'Average geography exposure weight'
     )
     COMMENT = 'Semantic view for active UCITS ETF performance, risk, peer grouping, and exposure analysis'
