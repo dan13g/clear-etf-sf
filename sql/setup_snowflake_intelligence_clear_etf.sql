@@ -15,7 +15,13 @@
 --
 -- Repo docs source:
 --   https://github.com/dan13g/clear-etf-sf.git
---   Folder copied for search indexing: /docs
+--   Folder copied for search indexing: /docs_text
+--
+-- Trial account note:
+--   Trial accounts do not support AI_PARSE_DOCUMENT or
+--   SNOWFLAKE.CORTEX.PARSE_DOCUMENT for PDF extraction.
+--   This script therefore expects pre-extracted plain text versions of the
+--   PDS documents in the repo under docs_text/.
 -- ============================================================================
 
 
@@ -106,11 +112,15 @@ ALTER GIT REPOSITORY CLEARETF_REPO FETCH;
 CREATE OR REPLACE STAGE INTERNAL_DOCS_STAGE
     DIRECTORY = (ENABLE = TRUE)
     ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
-    COMMENT = 'Internal stage holding PDF product disclosure statements copied from the ClearETF GitHub repo docs folder';
+    COMMENT = 'Internal stage holding text-ready UCITS ETF PDS documents copied from the ClearETF GitHub repo';
 
 COPY FILES
 INTO @INTERNAL_DOCS_STAGE/docs/
 FROM @CLEARETF_REPO/branches/main/docs/;
+
+COPY FILES
+INTO @INTERNAL_DOCS_STAGE/docs_text/
+FROM @CLEARETF_REPO/branches/main/docs_text/;
 
 ALTER STAGE INTERNAL_DOCS_STAGE REFRESH;
 
@@ -588,20 +598,27 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
 
 
 -- ============================================================================
--- 7. PARSE PDS DOCUMENTS FROM THE REPO STAGE
+-- 7. LOAD PRE-EXTRACTED PDS TEXT FROM THE REPO STAGE
 -- ============================================================================
 CREATE OR REPLACE TABLE UCITS_PDS_PARSED_CONTENT AS
 SELECT
+    METADATA$FILENAME AS relative_path,
+    UPPER(SPLIT_PART(REGEXP_SUBSTR(METADATA$FILENAME, '[^/]+$'), '.', 1)) AS ticker,
+    REGEXP_SUBSTR(METADATA$FILENAME, '[^/]+$') AS title,
+    BUILD_STAGE_FILE_URL('@INTERNAL_DOCS_STAGE', METADATA$FILENAME) AS file_url,
+    $1::STRING AS content
+FROM @INTERNAL_DOCS_STAGE/docs_text/
+    (FILE_FORMAT => 'TYPE = CSV FIELD_DELIMITER = NONE RECORD_DELIMITER = NONE')
+WHERE METADATA$FILENAME ILIKE '%.txt';
+
+CREATE OR REPLACE VIEW V_UCITS_PDS_DOCUMENT_INDEX AS
+SELECT
     relative_path,
-    UPPER(SPLIT_PART(REGEXP_SUBSTR(relative_path, '[^/]+$'), '.', 1)) AS ticker,
-    REGEXP_SUBSTR(relative_path, '[^/]+$') AS title,
-    BUILD_STAGE_FILE_URL(@INTERNAL_DOCS_STAGE, relative_path) AS file_url,
-    AI_PARSE_DOCUMENT(
-        TO_FILE('@INTERNAL_DOCS_STAGE', relative_path),
-        {'mode': 'LAYOUT'}
-    )::STRING AS content
-FROM DIRECTORY(@INTERNAL_DOCS_STAGE)
-WHERE relative_path ILIKE 'docs/%.pdf';
+    ticker,
+    title,
+    file_url,
+    content
+FROM UCITS_PDS_PARSED_CONTENT;
 
 
 -- ============================================================================
@@ -622,7 +639,7 @@ AS (
         title,
         ticker,
         content
-    FROM UCITS_PDS_PARSED_CONTENT
+    FROM V_UCITS_PDS_DOCUMENT_INDEX
 );
 
 
@@ -707,5 +724,5 @@ SELECT COUNT(*) AS parsed_doc_count
 FROM CLEARETF_DB.AI.UCITS_PDS_PARSED_CONTENT;
 
 SELECT relative_path, ticker, title
-FROM CLEARETF_DB.AI.UCITS_PDS_PARSED_CONTENT
+FROM CLEARETF_DB.AI.V_UCITS_PDS_DOCUMENT_INDEX
 ORDER BY relative_path;
