@@ -225,130 +225,130 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW
         ETFS_TO_EQUIVALENCE_GROUPS AS ETFS(EQUIVALENCE_GROUP_KEY) REFERENCES EQUIVALENCE_GROUPS(EQUIVALENCE_GROUP_KEY)
     )
     FACTS (
-        PRICES.OPEN_PRICE AS OPEN_PRICE COMMENT = 'Opening price on the trading date',
-        PRICES.HIGH_PRICE AS HIGH_PRICE COMMENT = 'High price on the trading date',
-        PRICES.LOW_PRICE AS LOW_PRICE COMMENT = 'Low price on the trading date',
-        PRICES.CLOSE_PRICE AS CLOSE_PRICE COMMENT = 'Closing price on the trading date',
+        PRICES.OPEN_PRICE AS PRICES.OPEN_PRICE COMMENT = 'Opening price on the trading date',
+        PRICES.HIGH_PRICE AS PRICES.HIGH_PRICE COMMENT = 'High price on the trading date',
+        PRICES.LOW_PRICE AS PRICES.LOW_PRICE COMMENT = 'Low price on the trading date',
+        PRICES.CLOSE_PRICE AS PRICES.CLOSE_PRICE COMMENT = 'Closing price on the trading date',
         PRICES.ADJUSTED_CLOSE_PRICE AS PRICES.ADJ_CLOSE_PRICE COMMENT = 'Adjusted close price on the trading date',
-        PRICES.VOLUME AS VOLUME COMMENT = 'Trading volume on the trading date',
+        PRICES.VOLUME AS PRICES.VOLUME COMMENT = 'Trading volume on the trading date',
         PRICES.PRICE_RECORD AS 1 COMMENT = 'Count of UCITS ETF daily price records'
     )
     DIMENSIONS (
         DATES.PRICE_DATE AS DATES.FULL_DATE
             WITH SYNONYMS = ('date', 'trading date', 'price date')
             COMMENT = 'Trading date of the daily price record',
-        DATES.DAY_NAME AS DAY_NAME
+        DATES.DAY_NAME AS DATES.DAY_NAME
             WITH SYNONYMS = ('weekday', 'day')
             COMMENT = 'Day name',
-        DATES.WEEK_OF_YEAR AS WEEK_OF_YEAR
+        DATES.WEEK_OF_YEAR AS DATES.WEEK_OF_YEAR
             WITH SYNONYMS = ('week', 'calendar week')
             COMMENT = 'Week number',
-        DATES.MONTH_NUMBER AS MONTH_NUMBER
+        DATES.MONTH_NUMBER AS DATES.MONTH_NUMBER
             WITH SYNONYMS = ('month number')
             COMMENT = 'Calendar month number',
-        DATES.MONTH_NAME AS MONTH_NAME
+        DATES.MONTH_NAME AS DATES.MONTH_NAME
             WITH SYNONYMS = ('month')
             COMMENT = 'Calendar month name',
-        DATES.QUARTER_NUMBER AS QUARTER_NUMBER
+        DATES.QUARTER_NUMBER AS DATES.QUARTER_NUMBER
             WITH SYNONYMS = ('quarter')
             COMMENT = 'Calendar quarter number',
-        DATES.YEAR_NUMBER AS YEAR_NUMBER
+        DATES.YEAR_NUMBER AS DATES.YEAR_NUMBER
             WITH SYNONYMS = ('year')
             COMMENT = 'Calendar year',
-        DATES.TRADING_DAY_FLAG AS TRADING_DAY_FLAG
+        DATES.TRADING_DAY_FLAG AS DATES.TRADING_DAY_FLAG
             WITH SYNONYMS = ('trading day', 'market day')
             COMMENT = 'True when the date exists in the tracked market history',
-        ETFS.TICKER AS TICKER
+        ETFS.TICKER AS ETFS.TICKER
             WITH SYNONYMS = ('symbol', 'fund ticker')
             COMMENT = 'ETF ticker',
-        ETFS.ETF_CODE AS ETF_CODE
+        ETFS.ETF_CODE AS ETFS.ETF_CODE
             WITH SYNONYMS = ('fund code', 'etf code')
             COMMENT = 'ETF business code',
-        ETFS.ISIN AS ISIN
+        ETFS.ISIN AS ETFS.ISIN
             WITH SYNONYMS = ('security isin')
             COMMENT = 'ISIN identifier',
-        ETFS.FUND_NAME AS FUND_NAME
+        ETFS.FUND_NAME AS ETFS.FUND_NAME
             WITH SYNONYMS = ('fund', 'fund name', 'etf name')
             COMMENT = 'Fund name',
-        ETFS.ASSET_CLASS AS ASSET_CLASS
+        ETFS.ASSET_CLASS AS ETFS.ASSET_CLASS
             WITH SYNONYMS = ('asset class')
             COMMENT = 'Asset class from ETF metadata',
         ETFS.ETF_CATEGORY AS ETFS.CATEGORY
             WITH SYNONYMS = ('category', 'fund category')
             COMMENT = 'ETF category',
-        ETFS.DISTRIBUTION_TYPE AS DISTRIBUTION_TYPE
+        ETFS.DISTRIBUTION_TYPE AS ETFS.DISTRIBUTION_TYPE
             WITH SYNONYMS = ('income type', 'distribution')
             COMMENT = 'Accumulating or distributing style',
-        ETFS.REPLICATION_METHOD AS REPLICATION_METHOD
+        ETFS.REPLICATION_METHOD AS ETFS.REPLICATION_METHOD
             WITH SYNONYMS = ('replication', 'tracking method')
             COMMENT = 'Replication approach',
         ETFS.FUND_CURRENCY AS ETFS.CURRENCY
             WITH SYNONYMS = ('fund currency', 'quote currency')
             COMMENT = 'Fund currency',
-        ETFS.DOMICILE AS DOMICILE
+        ETFS.DOMICILE AS ETFS.DOMICILE
             WITH SYNONYMS = ('fund domicile')
             COMMENT = 'Fund domicile',
-        ETFS.HEDGED_FLAG AS HEDGED_FLAG
+        ETFS.HEDGED_FLAG AS ETFS.HEDGED_FLAG
             WITH SYNONYMS = ('hedged', 'currency hedged')
             COMMENT = 'Currency hedged flag',
-        ETFS.UCITS_FLAG AS UCITS_FLAG
+        ETFS.UCITS_FLAG AS ETFS.UCITS_FLAG
             WITH SYNONYMS = ('ucits')
             COMMENT = 'UCITS flag; always true in this semantic view',
-        ETFS.TER AS TER
+        ETFS.TER AS ETFS.TER
             WITH SYNONYMS = ('ongoing charge', 'expense ratio', 'total expense ratio')
             COMMENT = 'Total expense ratio',
-        ETFS.INCEPTION_DATE AS INCEPTION_DATE
+        ETFS.INCEPTION_DATE AS ETFS.INCEPTION_DATE
             WITH SYNONYMS = ('launch date', 'fund inception')
             COMMENT = 'Fund inception date',
-        PROVIDERS.PROVIDER_NAME AS PROVIDER_NAME
+        PROVIDERS.PROVIDER_NAME AS PROVIDERS.PROVIDER_NAME
             WITH SYNONYMS = ('issuer', 'provider')
             COMMENT = 'ETF issuer name',
-        INDEXES.INDEX_NAME AS INDEX_NAME
+        INDEXES.INDEX_NAME AS INDEXES.INDEX_NAME
             WITH SYNONYMS = ('benchmark', 'tracked index')
             COMMENT = 'Benchmark index name',
-        INDEXES.INDEX_FAMILY AS INDEX_FAMILY
+        INDEXES.INDEX_FAMILY AS INDEXES.INDEX_FAMILY
             WITH SYNONYMS = ('index provider family')
             COMMENT = 'Index family',
         INDEXES.INDEX_REGION_TYPE AS INDEXES.BROAD_REGION_TYPE
             WITH SYNONYMS = ('benchmark region', 'index region')
             COMMENT = 'Broad benchmark region classification',
-        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE AS EQUIVALENCE_GROUP_CODE
+        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE AS EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE
             WITH SYNONYMS = ('peer group code')
             COMMENT = 'ETF peer group code',
-        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_NAME AS EQUIVALENCE_GROUP_NAME
+        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_NAME AS EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_NAME
             WITH SYNONYMS = ('peer group', 'equivalence group')
             COMMENT = 'ETF peer group name',
-        EQUIVALENCE_GROUPS.CANONICAL_EXPOSURE AS CANONICAL_EXPOSURE
+        EQUIVALENCE_GROUPS.CANONICAL_EXPOSURE AS EQUIVALENCE_GROUPS.CANONICAL_EXPOSURE
             WITH SYNONYMS = ('canonical exposure', 'reference exposure')
             COMMENT = 'Canonical exposure of the peer group',
-        ASSETS.ASSET_SUBTYPE AS ASSET_SUBTYPE
+        ASSETS.ASSET_SUBTYPE AS ASSETS.ASSET_SUBTYPE
             WITH SYNONYMS = ('asset subtype')
             COMMENT = 'Underlying asset subtype from the shared asset dimension',
-        ASSETS.REGION AS REGION
+        ASSETS.REGION AS ASSETS.REGION
             WITH SYNONYMS = ('market region')
             COMMENT = 'Primary market region from the shared asset dimension',
-        ASSETS.COUNTRY AS COUNTRY
+        ASSETS.COUNTRY AS ASSETS.COUNTRY
             WITH SYNONYMS = ('market country')
             COMMENT = 'Primary market country from the shared asset dimension',
-        ASSETS.EXCHANGE AS EXCHANGE
+        ASSETS.EXCHANGE AS ASSETS.EXCHANGE
             WITH SYNONYMS = ('listing exchange')
             COMMENT = 'Listing exchange',
-        CLASSIFICATIONS.ROLE AS ROLE
+        CLASSIFICATIONS.ROLE AS CLASSIFICATIONS.ROLE
             WITH SYNONYMS = ('portfolio role')
             COMMENT = 'Portfolio role classification',
-        CLASSIFICATIONS.RISK_BAND AS RISK_BAND
+        CLASSIFICATIONS.RISK_BAND AS CLASSIFICATIONS.RISK_BAND
             WITH SYNONYMS = ('risk level', 'risk band')
             COMMENT = 'Risk band derived from recent volatility',
-        CLASSIFICATIONS.VOLATILITY_BUCKET AS VOLATILITY_BUCKET
+        CLASSIFICATIONS.VOLATILITY_BUCKET AS CLASSIFICATIONS.VOLATILITY_BUCKET
             WITH SYNONYMS = ('volatility bucket')
             COMMENT = 'Volatility bucket classification',
-        CLASSIFICATIONS.DRAWDOWN_BUCKET AS DRAWDOWN_BUCKET
+        CLASSIFICATIONS.DRAWDOWN_BUCKET AS CLASSIFICATIONS.DRAWDOWN_BUCKET
             WITH SYNONYMS = ('drawdown bucket')
             COMMENT = 'Drawdown severity bucket',
-        CLASSIFICATIONS.TREND_CATEGORY AS TREND_CATEGORY
+        CLASSIFICATIONS.TREND_CATEGORY AS CLASSIFICATIONS.TREND_CATEGORY
             WITH SYNONYMS = ('trend', 'trend label')
             COMMENT = 'Trend classification',
-        CLASSIFICATIONS.CORE_SATELLITE_FLAG AS CORE_SATELLITE_FLAG
+        CLASSIFICATIONS.CORE_SATELLITE_FLAG AS CLASSIFICATIONS.CORE_SATELLITE_FLAG
             WITH SYNONYMS = ('core satellite')
             COMMENT = 'Core versus satellite classification'
     )
@@ -433,16 +433,16 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
         ETF_GEOGRAPHIES_TO_GEOGRAPHIES AS ETF_GEOGRAPHIES(GEOGRAPHY_KEY) REFERENCES GEOGRAPHIES(GEOGRAPHY_KEY)
     )
     FACTS (
-        ETF_FACTS.CLOSE_PRICE AS CLOSE_PRICE COMMENT = 'Closing price on the trading date',
-        ETF_FACTS.RETURN_1D AS RETURN_1D COMMENT = 'One-day return',
-        ETF_FACTS.RETURN_1W AS RETURN_1W COMMENT = 'One-week return',
-        ETF_FACTS.RETURN_1M AS RETURN_1M COMMENT = 'One-month return',
-        ETF_FACTS.RETURN_3M AS RETURN_3M COMMENT = 'Three-month return',
-        ETF_FACTS.RETURN_6M AS RETURN_6M COMMENT = 'Six-month return',
-        ETF_FACTS.RETURN_1Y AS RETURN_1Y COMMENT = 'One-year return',
-        ETF_FACTS.VOLATILITY_30D AS VOLATILITY_30D COMMENT = 'Thirty-day volatility',
-        ETF_FACTS.DRAWDOWN_52W AS DRAWDOWN_52W COMMENT = 'Fifty-two-week drawdown',
-        ETF_FACTS.SHARPE_PROXY AS SHARPE_PROXY COMMENT = 'One-year Sharpe proxy',
+        ETF_FACTS.CLOSE_PRICE AS ETF_FACTS.CLOSE_PRICE COMMENT = 'Closing price on the trading date',
+        ETF_FACTS.RETURN_1D AS ETF_FACTS.RETURN_1D COMMENT = 'One-day return',
+        ETF_FACTS.RETURN_1W AS ETF_FACTS.RETURN_1W COMMENT = 'One-week return',
+        ETF_FACTS.RETURN_1M AS ETF_FACTS.RETURN_1M COMMENT = 'One-month return',
+        ETF_FACTS.RETURN_3M AS ETF_FACTS.RETURN_3M COMMENT = 'Three-month return',
+        ETF_FACTS.RETURN_6M AS ETF_FACTS.RETURN_6M COMMENT = 'Six-month return',
+        ETF_FACTS.RETURN_1Y AS ETF_FACTS.RETURN_1Y COMMENT = 'One-year return',
+        ETF_FACTS.VOLATILITY_30D AS ETF_FACTS.VOLATILITY_30D COMMENT = 'Thirty-day volatility',
+        ETF_FACTS.DRAWDOWN_52W AS ETF_FACTS.DRAWDOWN_52W COMMENT = 'Fifty-two-week drawdown',
+        ETF_FACTS.SHARPE_PROXY AS ETF_FACTS.SHARPE_PROXY COMMENT = 'One-year Sharpe proxy',
         ETF_SECTORS.SECTOR_EXPOSURE_WEIGHT AS ETF_SECTORS.EXPOSURE_WEIGHT COMMENT = 'Sector exposure percentage weight',
         ETF_GEOGRAPHIES.GEOGRAPHY_EXPOSURE_WEIGHT AS ETF_GEOGRAPHIES.EXPOSURE_WEIGHT COMMENT = 'Geography exposure percentage weight',
         ETF_FACTS.ETF_RECORD AS 1 COMMENT = 'Count of UCITS ETF daily analytics records'
@@ -451,112 +451,112 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
         DATES.OBSERVATION_DATE AS DATES.FULL_DATE
             WITH SYNONYMS = ('date', 'observation date', 'trading date')
             COMMENT = 'Trading date of the ETF analytics record',
-        DATES.MONTH_NAME AS MONTH_NAME
+        DATES.MONTH_NAME AS DATES.MONTH_NAME
             WITH SYNONYMS = ('month')
             COMMENT = 'Calendar month name',
-        DATES.QUARTER_NUMBER AS QUARTER_NUMBER
+        DATES.QUARTER_NUMBER AS DATES.QUARTER_NUMBER
             WITH SYNONYMS = ('quarter')
             COMMENT = 'Calendar quarter number',
-        DATES.YEAR_NUMBER AS YEAR_NUMBER
+        DATES.YEAR_NUMBER AS DATES.YEAR_NUMBER
             WITH SYNONYMS = ('year')
             COMMENT = 'Calendar year',
-        ETFS.TICKER AS TICKER
+        ETFS.TICKER AS ETFS.TICKER
             WITH SYNONYMS = ('symbol', 'fund ticker')
             COMMENT = 'ETF ticker',
-        ETFS.ETF_CODE AS ETF_CODE
+        ETFS.ETF_CODE AS ETFS.ETF_CODE
             WITH SYNONYMS = ('fund code')
             COMMENT = 'ETF business code',
-        ETFS.ISIN AS ISIN
+        ETFS.ISIN AS ETFS.ISIN
             WITH SYNONYMS = ('security isin')
             COMMENT = 'ISIN identifier',
-        ETFS.FUND_NAME AS FUND_NAME
+        ETFS.FUND_NAME AS ETFS.FUND_NAME
             WITH SYNONYMS = ('fund', 'fund name', 'etf name')
             COMMENT = 'Fund name',
-        ETFS.ASSET_CLASS AS ASSET_CLASS
+        ETFS.ASSET_CLASS AS ETFS.ASSET_CLASS
             WITH SYNONYMS = ('asset class')
             COMMENT = 'Asset class from ETF metadata',
         ETFS.ETF_CATEGORY AS ETFS.CATEGORY
             WITH SYNONYMS = ('category')
             COMMENT = 'ETF category',
-        ETFS.DISTRIBUTION_TYPE AS DISTRIBUTION_TYPE
+        ETFS.DISTRIBUTION_TYPE AS ETFS.DISTRIBUTION_TYPE
             WITH SYNONYMS = ('distribution', 'income type')
             COMMENT = 'Accumulating or distributing style',
-        ETFS.REPLICATION_METHOD AS REPLICATION_METHOD
+        ETFS.REPLICATION_METHOD AS ETFS.REPLICATION_METHOD
             WITH SYNONYMS = ('replication')
             COMMENT = 'Replication method',
         ETFS.FUND_CURRENCY AS ETFS.CURRENCY
             WITH SYNONYMS = ('fund currency')
             COMMENT = 'Fund currency',
-        ETFS.DOMICILE AS DOMICILE
+        ETFS.DOMICILE AS ETFS.DOMICILE
             WITH SYNONYMS = ('fund domicile')
             COMMENT = 'Fund domicile',
-        ETFS.HEDGED_FLAG AS HEDGED_FLAG
+        ETFS.HEDGED_FLAG AS ETFS.HEDGED_FLAG
             WITH SYNONYMS = ('hedged')
             COMMENT = 'Currency hedged flag',
-        ETFS.UCITS_FLAG AS UCITS_FLAG
+        ETFS.UCITS_FLAG AS ETFS.UCITS_FLAG
             WITH SYNONYMS = ('ucits')
             COMMENT = 'UCITS flag; always true in this semantic view',
-        ETFS.TER AS TER
+        ETFS.TER AS ETFS.TER
             WITH SYNONYMS = ('expense ratio', 'total expense ratio', 'ongoing charge')
             COMMENT = 'Total expense ratio',
-        ETFS.INCEPTION_DATE AS INCEPTION_DATE
+        ETFS.INCEPTION_DATE AS ETFS.INCEPTION_DATE
             WITH SYNONYMS = ('launch date')
             COMMENT = 'Fund inception date',
-        PROVIDERS.PROVIDER_NAME AS PROVIDER_NAME
+        PROVIDERS.PROVIDER_NAME AS PROVIDERS.PROVIDER_NAME
             WITH SYNONYMS = ('issuer', 'provider')
             COMMENT = 'ETF issuer',
-        INDEXES.INDEX_NAME AS INDEX_NAME
+        INDEXES.INDEX_NAME AS INDEXES.INDEX_NAME
             WITH SYNONYMS = ('benchmark', 'tracked index')
             COMMENT = 'Tracked benchmark index',
-        INDEXES.INDEX_FAMILY AS INDEX_FAMILY
+        INDEXES.INDEX_FAMILY AS INDEXES.INDEX_FAMILY
             WITH SYNONYMS = ('index family')
             COMMENT = 'Index family',
         INDEXES.INDEX_REGION_TYPE AS INDEXES.BROAD_REGION_TYPE
             WITH SYNONYMS = ('benchmark region')
             COMMENT = 'Broad benchmark region classification',
-        INDEXES.DEVELOPED_FLAG AS DEVELOPED_FLAG
+        INDEXES.DEVELOPED_FLAG AS INDEXES.DEVELOPED_FLAG
             WITH SYNONYMS = ('developed markets')
             COMMENT = 'True when the benchmark is classified as developed markets',
-        INDEXES.EMERGING_FLAG AS EMERGING_FLAG
+        INDEXES.EMERGING_FLAG AS INDEXES.EMERGING_FLAG
             WITH SYNONYMS = ('emerging markets')
             COMMENT = 'True when the benchmark is classified as emerging markets',
-        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE AS EQUIVALENCE_GROUP_CODE
+        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE AS EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_CODE
             WITH SYNONYMS = ('peer group code')
             COMMENT = 'Peer group code',
-        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_NAME AS EQUIVALENCE_GROUP_NAME
+        EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_NAME AS EQUIVALENCE_GROUPS.EQUIVALENCE_GROUP_NAME
             WITH SYNONYMS = ('peer group')
             COMMENT = 'Peer group name',
-        EQUIVALENCE_GROUPS.GROUP_TYPE AS GROUP_TYPE
+        EQUIVALENCE_GROUPS.GROUP_TYPE AS EQUIVALENCE_GROUPS.GROUP_TYPE
             WITH SYNONYMS = ('peer group type')
             COMMENT = 'Equivalence group type',
-        EQUIVALENCE_GROUPS.CANONICAL_EXPOSURE AS CANONICAL_EXPOSURE
+        EQUIVALENCE_GROUPS.CANONICAL_EXPOSURE AS EQUIVALENCE_GROUPS.CANONICAL_EXPOSURE
             WITH SYNONYMS = ('canonical exposure')
             COMMENT = 'Canonical exposure',
-        CLASSIFICATIONS.ROLE AS ROLE
+        CLASSIFICATIONS.ROLE AS CLASSIFICATIONS.ROLE
             WITH SYNONYMS = ('portfolio role')
             COMMENT = 'Portfolio role classification',
-        CLASSIFICATIONS.RISK_BAND AS RISK_BAND
+        CLASSIFICATIONS.RISK_BAND AS CLASSIFICATIONS.RISK_BAND
             WITH SYNONYMS = ('risk band', 'risk level')
             COMMENT = 'Risk band from recent volatility',
-        CLASSIFICATIONS.VOLATILITY_BUCKET AS VOLATILITY_BUCKET
+        CLASSIFICATIONS.VOLATILITY_BUCKET AS CLASSIFICATIONS.VOLATILITY_BUCKET
             WITH SYNONYMS = ('volatility bucket')
             COMMENT = 'Volatility bucket',
-        CLASSIFICATIONS.DRAWDOWN_BUCKET AS DRAWDOWN_BUCKET
+        CLASSIFICATIONS.DRAWDOWN_BUCKET AS CLASSIFICATIONS.DRAWDOWN_BUCKET
             WITH SYNONYMS = ('drawdown bucket')
             COMMENT = 'Drawdown bucket',
-        CLASSIFICATIONS.TREND_CATEGORY AS TREND_CATEGORY
+        CLASSIFICATIONS.TREND_CATEGORY AS CLASSIFICATIONS.TREND_CATEGORY
             WITH SYNONYMS = ('trend', 'trend label')
             COMMENT = 'Trend classification',
-        CLASSIFICATIONS.CORE_SATELLITE_FLAG AS CORE_SATELLITE_FLAG
+        CLASSIFICATIONS.CORE_SATELLITE_FLAG AS CLASSIFICATIONS.CORE_SATELLITE_FLAG
             WITH SYNONYMS = ('core satellite')
             COMMENT = 'Core or satellite flag',
-        SECTORS.SECTOR_NAME AS SECTOR_NAME
+        SECTORS.SECTOR_NAME AS SECTORS.SECTOR_NAME
             WITH SYNONYMS = ('sector')
             COMMENT = 'Sector exposure label',
-        GEOGRAPHIES.GEOGRAPHY_NAME AS GEOGRAPHY_NAME
+        GEOGRAPHIES.GEOGRAPHY_NAME AS GEOGRAPHIES.GEOGRAPHY_NAME
             WITH SYNONYMS = ('geography', 'country exposure', 'regional exposure')
             COMMENT = 'Geography exposure label',
-        GEOGRAPHIES.GEOGRAPHY_GROUP AS GEOGRAPHY_GROUP
+        GEOGRAPHIES.GEOGRAPHY_GROUP AS GEOGRAPHIES.GEOGRAPHY_GROUP
             WITH SYNONYMS = ('geography group', 'region group')
             COMMENT = 'Grouped geography exposure label'
     )
