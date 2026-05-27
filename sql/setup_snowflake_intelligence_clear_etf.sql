@@ -1,7 +1,7 @@
 -- ============================================================================
 -- ClearETF Snowflake Intelligence Setup
 -- Purpose:
---   Create a Snowflake Intelligence + Cortex Analyst setup for
+--   Create a Snowflake Intelligence + Cortex Analyst + Cortex Search setup for
 --   the existing ClearETF warehouse model in CLEARETF_DB.
 --
 -- Scope:
@@ -9,15 +9,19 @@
 --     CLEARETF_DB.DIMENSIONS.
 --   - Creates a fresh SNOWFLAKE_INTELLIGENCE database for agent objects.
 --   - Creates a dedicated warehouse for AI workloads.
---   - Uses Cortex Analyst tools.
+--   - Uses only Cortex Analyst and Cortex Search tools.
 --   - Excludes CSV uploads, web scraping, email, and Streamlit generation.
 --   - Constrains the agent to active UCITS ETF analysis for IFA use cases.
 --
 -- Repo docs source:
 --   https://github.com/dan13g/clear-etf-sf.git
+--   Folder copied for search indexing: /docs_text
+--
 -- Trial account note:
---   This script is configured for trial-account compatibility and uses
---   Cortex Analyst only.
+--   Trial accounts do not support AI_PARSE_DOCUMENT or
+--   SNOWFLAKE.CORTEX.PARSE_DOCUMENT for PDF extraction.
+--   This script therefore expects pre-extracted plain text versions of the
+--   PDS documents in the repo under docs_text/.
 -- ============================================================================
 
 
@@ -66,6 +70,10 @@ CREATE SCHEMA IF NOT EXISTS CLEARETF_DB.AI;
 GRANT USAGE ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 GRANT CREATE VIEW ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 GRANT CREATE TABLE ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+GRANT CREATE STAGE ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+GRANT CREATE FILE FORMAT ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+GRANT CREATE GIT REPOSITORY ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+GRANT CREATE CORTEX SEARCH SERVICE ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 GRANT CREATE SEMANTIC VIEW ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 
 GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
@@ -77,12 +85,60 @@ ALTER USER IDENTIFIER($current_user_name) SET DEFAULT_WAREHOUSE = CLEAR_ETF_INTE
 
 
 -- ============================================================================
+-- 1. GIT ACCESS FOR PDF DOCUMENTS IN THE REPO /docs FOLDER
+-- ============================================================================
+CREATE OR REPLACE API INTEGRATION CLEAR_ETF_GIT_API_INTEGRATION
+    API_PROVIDER = git_https_api
+    API_ALLOWED_PREFIXES = (
+        'https://github.com/dan13g/'
+    )
+    ENABLED = TRUE;
+
+GRANT USAGE ON INTEGRATION CLEAR_ETF_GIT_API_INTEGRATION TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+
+
+-- ============================================================================
 -- 2. WORK IN THE AI ROLE
 -- ============================================================================
 USE ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 USE WAREHOUSE CLEAR_ETF_INTELLIGENCE_WH;
 USE DATABASE CLEARETF_DB;
 USE SCHEMA AI;
+
+
+-- ============================================================================
+-- 3. REPO + STAGE FOR PDS DOCUMENTS
+-- ============================================================================
+CREATE OR REPLACE GIT REPOSITORY CLEARETF_REPO
+    API_INTEGRATION = CLEAR_ETF_GIT_API_INTEGRATION
+    ORIGIN = 'https://github.com/dan13g/clear-etf-sf.git';
+
+ALTER GIT REPOSITORY CLEARETF_REPO FETCH;
+
+CREATE OR REPLACE STAGE INTERNAL_DOCS_STAGE
+    DIRECTORY = (ENABLE = TRUE)
+    ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
+    COMMENT = 'Internal stage holding text-ready UCITS ETF PDS documents copied from the ClearETF GitHub repo';
+
+CREATE OR REPLACE FILE FORMAT PDS_TEXT_FILE_FORMAT
+    TYPE = CSV
+    FIELD_DELIMITER = NONE
+    RECORD_DELIMITER = NONE
+    COMPRESSION = NONE
+    FIELD_OPTIONALLY_ENCLOSED_BY = NONE
+    ESCAPE = NONE
+    ESCAPE_UNENCLOSED_FIELD = NONE;
+
+COPY FILES
+INTO @INTERNAL_DOCS_STAGE/docs/
+FROM @CLEARETF_REPO/branches/main/docs/;
+
+COPY FILES
+INTO @INTERNAL_DOCS_STAGE/docs_text/
+FROM @CLEARETF_REPO/branches/main/docs_text/;
+
+ALTER STAGE INTERNAL_DOCS_STAGE REFRESH;
+
 
 -- ============================================================================
 -- 4. HELPER VIEWS TO ENFORCE UCITS-ONLY SCOPE
@@ -557,13 +613,59 @@ CREATE OR REPLACE SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW
 
 
 -- ============================================================================
--- 7. CREATE THE UCITS-ONLY IFA AGENT
+-- 7. LOAD PRE-EXTRACTED PDS TEXT FROM THE REPO STAGE
+-- ============================================================================
+CREATE OR REPLACE TABLE UCITS_PDS_PARSED_CONTENT AS
+SELECT
+    METADATA$FILENAME AS relative_path,
+    UPPER(SPLIT_PART(REGEXP_SUBSTR(METADATA$FILENAME, '[^/]+$'), '.', 1)) AS ticker,
+    REGEXP_SUBSTR(METADATA$FILENAME, '[^/]+$') AS title,
+    BUILD_STAGE_FILE_URL('@INTERNAL_DOCS_STAGE', METADATA$FILENAME) AS file_url,
+    $1::STRING AS content
+FROM @INTERNAL_DOCS_STAGE/docs_text/
+    (FILE_FORMAT => PDS_TEXT_FILE_FORMAT)
+WHERE METADATA$FILENAME ILIKE '%.txt';
+
+CREATE OR REPLACE VIEW V_UCITS_PDS_DOCUMENT_INDEX AS
+SELECT
+    relative_path,
+    ticker,
+    title,
+    file_url,
+    content
+FROM UCITS_PDS_PARSED_CONTENT;
+
+
+-- ============================================================================
+-- 8. CORTEX SEARCH SERVICE FOR UCITS ETF PDS DOCUMENTS
+-- ============================================================================
+CREATE OR REPLACE CORTEX SEARCH SERVICE SEARCH_UCITS_PDS_DOCS
+    ON content
+    PRIMARY KEY (relative_path)
+    ATTRIBUTES relative_path, file_url, title, ticker
+    WAREHOUSE = CLEAR_ETF_INTELLIGENCE_WH
+    TARGET_LAG = '1 day'
+    EMBEDDING_MODEL = 'snowflake-arctic-embed-l-v2.0'
+    COMMENT = 'Semantic search service over UCITS ETF PDS PDFs stored in the repo docs folder'
+AS (
+    SELECT
+        relative_path,
+        file_url,
+        title,
+        ticker,
+        content
+    FROM V_UCITS_PDS_DOCUMENT_INDEX
+);
+
+
+-- ============================================================================
+-- 9. CREATE THE UCITS-ONLY IFA AGENT
 -- ============================================================================
 USE DATABASE SNOWFLAKE_INTELLIGENCE;
 USE SCHEMA AGENTS;
 
 CREATE OR REPLACE AGENT UCITS_IFA_ANALYST_AGENT
-    COMMENT = 'IFA-focused agent for UCITS ETF analysis using Cortex Analyst only'
+    COMMENT = 'IFA-focused agent for UCITS ETF analysis using Cortex Analyst and Cortex Search only'
     PROFILE = '{"display_name": "ClearETF UCITS IFA Analyst", "color": "blue"}'
     FROM SPECIFICATION
 $$
@@ -577,11 +679,12 @@ orchestration:
 
 instructions:
   response: "You are an IFA-focused analyst for UCITS ETFs only. Be concise, practical, and evidence-based. If a question falls outside UCITS ETFs, say that it is out of scope and invite the user to ask a UCITS ETF question instead."
-  orchestration: "Use Cortex Analyst for structured questions about prices, returns, volatility, drawdowns, Sharpe proxy, TER, issuers, benchmarks, peer groups, sectors, and geography exposures. Prefer the ETF analytics semantic view for performance and risk questions, and the price semantic view for OHLCV history. If the user does not specify a date range, default to the latest available 12 months. Do not answer questions about non-UCITS ETFs, single stocks, direct web content, email tasks, or document-search requests on this trial account."
+  orchestration: "Use Cortex Search first when the user asks about product documentation, disclosures, objectives, risks, investment policy, replication method, or wording from the PDS. Use Cortex Analyst for structured questions about prices, returns, volatility, drawdowns, Sharpe proxy, TER, issuers, benchmarks, peer groups, sectors, and geography exposures. Prefer the ETF analytics semantic view for performance and risk questions, and the price semantic view for OHLCV history. If the user does not specify a date range, default to the latest available 12 months. Do not answer questions about non-UCITS ETFs, single stocks, direct web content, or email tasks."
   sample_questions:
     - question: "Compare VWRP and VUSA on 1Y return, 30D volatility, drawdown, and TER."
     - question: "What is the latest close price and 12 month high-low range for VWRP?"
     - question: "Which UCITS ETF peer group does VUSA belong to?"
+    - question: "What does the VWRP PDS say about the fund objective and replication method?"
     - question: "Show the sector and geography exposures for VUSA."
 
 tools:
@@ -593,12 +696,21 @@ tools:
       type: "cortex_analyst_text_to_sql"
       name: "Query UCITS ETF Analytics"
       description: "Use for UCITS ETF returns, volatility, drawdowns, Sharpe proxy, TER, benchmark, provider, peer-group, and exposure analysis."
+  - tool_spec:
+      type: "cortex_search"
+      name: "Search UCITS ETF PDS Documents"
+      description: "Use for product disclosure statements and other PDF content from the repo docs folder."
 
 tool_resources:
   "Query UCITS ETF Price History":
     semantic_view: "CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW"
   "Query UCITS ETF Analytics":
     semantic_view: "CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW"
+  "Search UCITS ETF PDS Documents":
+    name: "CLEARETF_DB.AI.SEARCH_UCITS_PDS_DOCS"
+    max_results: "5"
+    title_column: "TITLE"
+    id_column: "FILE_URL"
 $$;
 
 GRANT USAGE ON AGENT SNOWFLAKE_INTELLIGENCE.AGENTS.UCITS_IFA_ANALYST_AGENT TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
@@ -606,7 +718,7 @@ GRANT MONITOR ON AGENT SNOWFLAKE_INTELLIGENCE.AGENTS.UCITS_IFA_ANALYST_AGENT TO 
 
 
 -- ============================================================================
--- 8. GRANTS FOR THE AGENT ROLE
+-- 10. GRANTS FOR THE AGENT ROLE
 -- ============================================================================
 GRANT USAGE ON DATABASE CLEARETF_DB TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 GRANT USAGE ON SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
@@ -614,13 +726,23 @@ GRANT SELECT ON SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ASSET_PRICE_SEMANTIC_VIEW TO 
 GRANT SELECT ON SEMANTIC VIEW CLEARETF_DB.AI.UCITS_ETF_DAILY_SEMANTIC_VIEW TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 GRANT SELECT ON ALL VIEWS IN SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 GRANT SELECT ON ALL TABLES IN SCHEMA CLEARETF_DB.AI TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+GRANT READ ON STAGE CLEARETF_DB.AI.INTERNAL_DOCS_STAGE TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
+GRANT USAGE ON CORTEX SEARCH SERVICE CLEARETF_DB.AI.SEARCH_UCITS_PDS_DOCS TO ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 
 
 -- ============================================================================
--- 9. VERIFICATION
+-- 11. VERIFICATION
 -- ============================================================================
 USE ROLE CLEAR_ETF_INTELLIGENCE_ROLE;
 USE WAREHOUSE CLEAR_ETF_INTELLIGENCE_WH;
 
 SHOW SEMANTIC VIEWS IN SCHEMA CLEARETF_DB.AI;
+SHOW CORTEX SEARCH SERVICES IN SCHEMA CLEARETF_DB.AI;
 SHOW AGENTS IN SCHEMA SNOWFLAKE_INTELLIGENCE.AGENTS;
+
+SELECT COUNT(*) AS parsed_doc_count
+FROM CLEARETF_DB.AI.UCITS_PDS_PARSED_CONTENT;
+
+SELECT relative_path, ticker, title
+FROM CLEARETF_DB.AI.V_UCITS_PDS_DOCUMENT_INDEX
+ORDER BY relative_path;
